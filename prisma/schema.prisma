@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id         String     @id @default(cuid())
+  email      String     @unique
+  username   String     @unique
+  name       String
+  avatar     String?
+  cover      String?
+  bio        String?
+  createdAt  DateTime   @default(now())
+  activities Activity[]
+  following  Follow[]   @relation("Follower")
+  followers  Follow[]   @relation("Following")
+}
+
+model Activity {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  name          String
+  description   String?
+  type          String
+  date          DateTime
+  distance      Float
+  duration      Int
+  elevationGain Float?
+  avgSpeed      Float?
+  maxSpeed      Float?
+  avgHeartRate  Int?
+  maxHeartRate  Int?
+  calories      Int?
+  polyline      String?
+  gpxData       String?
+  isPublic      Boolean  @default(true)
+  showMap       Boolean  @default(true)
+  showHeartRate Boolean  @default(true)
+  showSpeed     Boolean  @default(true)
+  showCalories  Boolean  @default(true)
+  createdAt     DateTime @default(now())
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  followingId String
+  follower    User     @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+  @@index([followingId])
+}
