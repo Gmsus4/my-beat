@@ -1,4 +1,4 @@
-import type { Point, Track } from "gpxparser";
+import type { Point } from "gpxparser";
 
 type GpxPoint = Point & {
   ele: number | null;
@@ -73,14 +73,17 @@ export async function parseGpxActivity(xml: string): Promise<ParsedActivity> {
       : 0;
   const distance = track.distance.total;
   const speeds = getSegmentSpeeds(points);
-  const heartRates = getHeartRates(parser.xmlSource as unknown as Document);
+  const document = parser.xmlSource as unknown as Document;
+  const heartRates = getHeartRates(document);
+  const type = normalizeActivityType(track.type);
+  const date =
+    firstPointWithTime?.time ??
+    (parser.metadata.time ? new Date(parser.metadata.time) : new Date());
 
   return {
     name: getActivityName(track),
-    type: normalizeActivityType(track.type),
-    date:
-      firstPointWithTime?.time ??
-      (parser.metadata.time ? new Date(parser.metadata.time) : new Date()),
+    type,
+    date,
     distance,
     duration,
     elevationGain: track.elevation.pos ?? null,
@@ -98,7 +101,7 @@ export async function parseGpxActivity(xml: string): Promise<ParsedActivity> {
   };
 }
 
-function getActivityName(track: Track): string {
+function getActivityName(track: { name?: string | null }): string {
   const name = track.name?.trim();
 
   if (name) {
@@ -415,6 +418,7 @@ function getHeartRates(document: Document) {
 
   return heartRates;
 }
+
 
 function samplePoints(points: GpxPoint[]) {
   const step = Math.max(1, Math.ceil(points.length / maxStoredPoints));

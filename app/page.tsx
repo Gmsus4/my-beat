@@ -2,16 +2,12 @@ import { getServerSession } from "next-auth/next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { MiniRouteCanvas } from "@/app/[username]/mini-route-canvas";
 import { AppShell } from "@/app/components/app-shell";
+import { FeedList } from "@/app/components/feed-list";
 import { GoogleLoginButton } from "@/app/components/google-login-button";
 import { authOptions } from "@/lib/auth";
+import { getFollowedFeedPage } from "@/lib/feed";
 import { prisma } from "@/lib/prisma";
-
-type RoutePoint = {
-  lat: number;
-  lon: number;
-};
 
 export default async function Home() {
   const session = await getServerSession(authOptions);
@@ -24,9 +20,6 @@ export default async function Home() {
     where: { email: session.user.email },
     select: {
       id: true,
-      following: {
-        select: { followingId: true },
-      },
     },
   });
 
@@ -34,41 +27,7 @@ export default async function Home() {
     redirect("/onboarding");
   }
 
-  const followingIds = user.following.map((follow) => follow.followingId);
-  const activities =
-    followingIds.length > 0
-      ? await prisma.activity.findMany({
-          where: {
-            isPublic: true,
-            userId: { in: followingIds },
-          },
-          orderBy: { date: "desc" },
-          take: 30,
-          select: {
-            id: true,
-            name: true,
-            type: true,
-            date: true,
-            distance: true,
-            duration: true,
-            elevationGain: true,
-            avgHeartRate: true,
-            calories: true,
-            polyline: true,
-            showMap: true,
-            showHeartRate: true,
-            showSpeed: true,
-            showCalories: true,
-            user: {
-              select: {
-                username: true,
-                name: true,
-                avatar: true,
-              },
-            },
-          },
-        })
-      : [];
+  const feedPage = await getFollowedFeedPage(session.user.email);
 
   return (
     <AppShell>
@@ -92,97 +51,10 @@ export default async function Home() {
             </Link>
           </div>
 
-          {activities.length > 0 ? (
-            <div className="grid gap-5">
-              {activities.map((activity) => {
-                const points = parsePolyline(activity.polyline);
-
-                return (
-                  <Link
-                    key={activity.id}
-                    href={`/${activity.user.username}/activity/${activity.id}`}
-                    className="rounded-lg border border-zinc-800 bg-zinc-950 p-5 transition hover:border-orange-500/70"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex min-w-0 items-center gap-3">
-                        <Avatar
-                          name={activity.user.name}
-                          avatar={activity.user.avatar}
-                        />
-                        <div className="min-w-0">
-                          <p className="truncate font-semibold">
-                            {activity.user.name}
-                          </p>
-                          <p className="truncate text-sm text-zinc-500">
-                            @{activity.user.username}
-                          </p>
-                        </div>
-                      </div>
-                      <p className="shrink-0 text-sm text-zinc-500">
-                        {formatShortDate(activity.date)}
-                      </p>
-                    </div>
-
-                    <div className="mt-5">
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-orange-500">
-                        {activity.type}
-                      </p>
-                      <h2 className="mt-2 text-xl font-semibold">
-                        {activity.name}
-                      </h2>
-                    </div>
-
-                    {activity.showMap ? (
-                      <div className="mt-4">
-                        <MiniRouteCanvas points={points} />
-                      </div>
-                    ) : null}
-
-                    <div className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
-                      <Metric
-                        label="Distancia"
-                        value={formatDistance(activity.distance)}
-                      />
-                      {activity.showSpeed ? (
-                        <Metric
-                          label="Ritmo"
-                          value={formatPace(activity.distance, activity.duration)}
-                        />
-                      ) : null}
-                      <Metric
-                        label="Tiempo"
-                        value={formatDuration(activity.duration)}
-                      />
-                      <Metric
-                        label="Elevacion"
-                        value={formatElevation(activity.elevationGain)}
-                      />
-                      {activity.showHeartRate ? (
-                        <Metric
-                          label="FC"
-                          value={formatHeartRate(activity.avgHeartRate)}
-                        />
-                      ) : null}
-                      {activity.showCalories ? (
-                        <Metric
-                          label="Calorias"
-                          value={formatCalories(activity.calories)}
-                        />
-                      ) : null}
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="rounded-lg border border-dashed border-zinc-800 bg-zinc-950/50 p-8">
-              <h2 className="text-xl font-semibold">Tu inicio esta vacio.</h2>
-              <p className="mt-2 max-w-2xl text-zinc-400">
-                Busca usuarios y sigue a otros atletas para ver sus actividades
-                publicas aqui.
-              </p>
-            </div>
-          )}
+          <FeedList
+            initialActivities={feedPage.activities}
+            initialNextCursor={feedPage.nextCursor}
+          />
         </section>
       </main>
     </AppShell>
@@ -247,19 +119,6 @@ function Landing() {
   );
 }
 
-function Avatar({ name, avatar }: { name: string; avatar: string | null }) {
-  return (
-    <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-zinc-800 bg-black text-sm font-semibold text-orange-500">
-      {avatar ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={avatar} alt={name} className="h-full w-full object-cover" />
-      ) : (
-        name.slice(0, 1).toUpperCase()
-      )}
-    </span>
-  );
-}
-
 function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div>
@@ -267,74 +126,4 @@ function Metric({ label, value }: { label: string; value: string }) {
       <p className="mt-1 font-semibold text-white">{value}</p>
     </div>
   );
-}
-
-function parsePolyline(polyline: string | null): RoutePoint[] {
-  if (!polyline) {
-    return [];
-  }
-
-  try {
-    const parsed = JSON.parse(polyline) as RoutePoint[];
-
-    return Array.isArray(parsed)
-      ? parsed.filter(
-          (point) =>
-            typeof point.lat === "number" && typeof point.lon === "number",
-        )
-      : [];
-  } catch {
-    return [];
-  }
-}
-
-function formatShortDate(date: Date) {
-  return new Intl.DateTimeFormat("es-MX", {
-    day: "numeric",
-    month: "short",
-  }).format(date);
-}
-
-function formatDistance(meters: number) {
-  return `${(meters / 1000).toFixed(2)} km`;
-}
-
-function formatPace(distance: number, duration: number) {
-  if (distance <= 0 || duration <= 0) {
-    return "--";
-  }
-
-  const secondsPerKilometer = duration / (distance / 1000);
-  const minutes = Math.floor(secondsPerKilometer / 60);
-  const seconds = Math.round(secondsPerKilometer % 60)
-    .toString()
-    .padStart(2, "0");
-
-  return `${minutes}:${seconds} /km`;
-}
-
-function formatDuration(totalSeconds: number) {
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = Math.floor(totalSeconds % 60);
-
-  if (hours > 0) {
-    return `${hours}:${minutes.toString().padStart(2, "0")}:${seconds
-      .toString()
-      .padStart(2, "0")}`;
-  }
-
-  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-}
-
-function formatElevation(elevation: number | null) {
-  return elevation === null ? "--" : `${Math.round(elevation)} m`;
-}
-
-function formatHeartRate(heartRate: number | null) {
-  return heartRate === null ? "--" : `${heartRate} ppm`;
-}
-
-function formatCalories(calories: number | null) {
-  return calories === null ? "--" : `${calories} kcal`;
 }

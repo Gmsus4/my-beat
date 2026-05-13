@@ -44,6 +44,29 @@ export default async function UploadPage() {
         <div className="rounded-lg border border-zinc-800 bg-zinc-950/70 p-6">
           <UploadForm />
         </div>
+
+        <div className="rounded-lg border border-zinc-800 bg-black p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+                Ayuda
+              </p>
+              <h2 className="mt-2 text-lg font-semibold">
+                Como consigo un archivo GPX?
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
+                Consulta una guia rapida para exportar actividades desde Strava,
+                Garmin Connect y otras apps antes de subirlas a Mybeat.
+              </p>
+            </div>
+            <Link
+              href="/help/gpx"
+              className="inline-flex h-10 shrink-0 items-center justify-center rounded-md border border-zinc-700 px-4 text-sm font-semibold text-white transition hover:border-orange-500 hover:text-orange-400"
+            >
+              Ver tutorial GPX
+            </Link>
+          </div>
+        </div>
       </section>
     </main>
   );
