@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth/next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { ActivityTypeFilter } from "@/app/components/activity-type-filter";
 import { DateRangeFilter } from "@/app/components/date-range-filter";
 import { authOptions } from "@/lib/auth";
 import {
@@ -18,6 +19,7 @@ import { prisma } from "@/lib/prisma";
 type DashboardPageProps = {
   searchParams: Promise<{
     range?: string | string[];
+    type?: string | string[];
   }>;
 };
 
@@ -30,30 +32,45 @@ export default async function DashboardPage({
     redirect("/");
   }
 
-  const { range } = await searchParams;
+  const { range, type } = await searchParams;
   const activeRange = normalizeActivityDateRange(range);
   const fromDate = getActivityDateFilter(activeRange);
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-    select: {
-      username: true,
-      activities: {
-        where: fromDate ? { date: { gte: fromDate } } : undefined,
-        orderBy: { date: "desc" },
-        select: {
-          id: true,
-          name: true,
-          type: true,
-          date: true,
-          distance: true,
-          duration: true,
-          elevationGain: true,
-          avgHeartRate: true,
-          gpxData: true,
+  const activeType = normalizeActivityTypeFilter(type);
+  const [user, activityTypes] = await Promise.all([
+    prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: {
+        username: true,
+        activities: {
+          where: {
+            ...(fromDate ? { date: { gte: fromDate } } : {}),
+            ...(activeType ? { type: activeType } : {}),
+          },
+          orderBy: { date: "desc" },
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            date: true,
+            distance: true,
+            duration: true,
+            elevationGain: true,
+            avgHeartRate: true,
+            gpxData: true,
+          },
         },
       },
-    },
-  });
+    }),
+    prisma.activity.findMany({
+      where: {
+        user: { email: session.user.email },
+        ...(fromDate ? { date: { gte: fromDate } } : {}),
+      },
+      distinct: ["type"],
+      orderBy: { type: "asc" },
+      select: { type: true },
+    }),
+  ]);
 
   if (!user) {
     redirect("/onboarding");
@@ -90,7 +107,21 @@ export default async function DashboardPage({
         </div>
 
         <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-4">
-          <DateRangeFilter activeRange={activeRange} basePath="/dashboard" />
+          <p className="mb-3 text-sm font-semibold text-zinc-400">Fechas</p>
+          <DateRangeFilter
+            activeRange={activeRange}
+            activityType={activeType}
+            basePath="/dashboard"
+          />
+          <p className="mb-3 mt-5 text-sm font-semibold text-zinc-400">
+            Tipo de actividad
+          </p>
+          <ActivityTypeFilter
+            activeRange={activeRange}
+            activeType={activeType}
+            basePath="/dashboard"
+            types={activityTypes.map((activity) => activity.type)}
+          />
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -327,6 +358,13 @@ function formatElevation(elevation: number | null) {
   }
 
   return `${Math.round(elevation)} m`;
+}
+
+function normalizeActivityTypeFilter(type: string | string[] | undefined) {
+  const value = Array.isArray(type) ? type[0] : type;
+  const normalized = value?.trim().toLowerCase();
+
+  return normalized || null;
 }
 
 function formatRaceDistance(distance: number) {

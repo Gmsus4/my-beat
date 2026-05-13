@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { getServerSession } from "next-auth/next";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { MiniRouteCanvas } from "@/app/[username]/mini-route-canvas";
+import { ActivityTypeFilter } from "@/app/components/activity-type-filter";
 import { DateRangeFilter } from "@/app/components/date-range-filter";
 import { FollowButton } from "@/app/components/follow-button";
 import {
@@ -17,6 +19,7 @@ type PageProps = {
   params: Promise<{ username: string }>;
   searchParams: Promise<{
     range?: string | string[];
+    type?: string | string[];
   }>;
 };
 
@@ -27,21 +30,84 @@ type RoutePoint = {
 
 const reservedRoutes = new Set(["api", "dashboard", "onboarding"]);
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ username: string }>;
+}): Promise<Metadata> {
+  const { username } = await params;
+
+  if (reservedRoutes.has(username.toLowerCase())) {
+    return {};
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { username },
+    select: {
+      username: true,
+      name: true,
+      bio: true,
+      avatar: true,
+      cover: true,
+      _count: {
+        select: {
+          activities: { where: { isPublic: true } },
+          followers: true,
+        },
+      },
+    },
+  });
+
+  if (!user) {
+    return {
+      title: "Perfil no encontrado",
+    };
+  }
+
+  const title = `${user.name} (@${user.username})`;
+  const description =
+    user.bio ||
+    `${user._count.activities} actividades publicas en Mybeat. ${user._count.followers} seguidores.`;
+  const images = getMetadataImages(user.cover, user.avatar);
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: `/${user.username}`,
+    },
+    openGraph: {
+      title,
+      description,
+      type: "profile",
+      url: `/${user.username}`,
+      images,
+    },
+    twitter: {
+      card: images.length > 0 ? "summary_large_image" : "summary",
+      title,
+      description,
+      images,
+    },
+  };
+}
+
 export default async function PublicProfilePage({
   params,
   searchParams,
 }: PageProps) {
   const { username } = await params;
-  const { range } = await searchParams;
+  const { range, type } = await searchParams;
   const activeRange = normalizeActivityDateRange(range);
   const fromDate = getActivityDateFilter(activeRange);
+  const activeType = normalizeActivityTypeFilter(type);
   const session = await getServerSession(authOptions);
 
   if (reservedRoutes.has(username.toLowerCase())) {
     notFound();
   }
 
-  const [user, currentUser] = await Promise.all([
+  const [user, currentUser, activityTypes] = await Promise.all([
     prisma.user.findUnique({
       where: { username },
       select: {
@@ -62,6 +128,7 @@ export default async function PublicProfilePage({
           where: {
             isPublic: true,
             ...(fromDate ? { date: { gte: fromDate } } : {}),
+            ...(activeType ? { type: activeType } : {}),
           },
           orderBy: { date: "desc" },
           select: {
@@ -94,6 +161,16 @@ export default async function PublicProfilePage({
           },
         })
       : null,
+    prisma.activity.findMany({
+      where: {
+        isPublic: true,
+        user: { username },
+        ...(fromDate ? { date: { gte: fromDate } } : {}),
+      },
+      distinct: ["type"],
+      orderBy: { type: "asc" },
+      select: { type: true },
+    }),
   ]);
 
   if (!user) {
@@ -294,9 +371,20 @@ export default async function PublicProfilePage({
         </div>
 
         <div className="mb-5 rounded-lg border border-zinc-800 bg-zinc-950 p-4">
+          <p className="mb-3 text-sm font-semibold text-zinc-400">Fechas</p>
           <DateRangeFilter
             activeRange={activeRange}
+            activityType={activeType}
             basePath={`/${user.username}`}
+          />
+          <p className="mb-3 mt-5 text-sm font-semibold text-zinc-400">
+            Tipo de actividad
+          </p>
+          <ActivityTypeFilter
+            activeRange={activeRange}
+            activeType={activeType}
+            basePath={`/${user.username}`}
+            types={activityTypes.map((activity) => activity.type)}
           />
         </div>
 
@@ -379,6 +467,12 @@ export default async function PublicProfilePage({
       </section>
     </main>
   );
+}
+
+function getMetadataImages(...urls: (string | null)[]) {
+  return urls
+    .filter((url): url is string => Boolean(url))
+    .map((url) => ({ url }));
 }
 
 function ProfileStat({
@@ -530,6 +624,13 @@ function formatHeartRate(heartRate: number | null) {
 
 function formatCalories(calories: number | null) {
   return calories === null ? "--" : `${calories} kcal`;
+}
+
+function normalizeActivityTypeFilter(type: string | string[] | undefined) {
+  const value = Array.isArray(type) ? type[0] : type;
+  const normalized = value?.trim().toLowerCase();
+
+  return normalized || null;
 }
 
 function formatRaceDistance(distance: number) {

@@ -137,6 +137,10 @@ export default async function ActivityDetailPage({ params }: PageProps) {
 
         <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-5">
           <h2 className="text-lg font-semibold">Ritmos por kilometro</h2>
+          <p className="mt-1 text-sm text-zinc-500">
+            Calculados con tiempo en movimiento para acercarse a plataformas
+            como Strava.
+          </p>
           {splits.length > 0 ? (
             <div className="mt-4 overflow-x-auto">
               <table className="w-full min-w-[520px] text-left text-sm">

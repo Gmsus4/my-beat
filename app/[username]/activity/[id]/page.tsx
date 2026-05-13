@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { RouteCanvas } from "@/app/dashboard/activity/[id]/route-canvas";
@@ -16,6 +17,82 @@ type RoutePoint = {
   lat: number;
   lon: number;
 };
+
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const { username, id } = await params;
+  const activity = await prisma.activity.findFirst({
+    where: {
+      id,
+      isPublic: true,
+      user: { username },
+    },
+    select: {
+      name: true,
+      type: true,
+      date: true,
+      distance: true,
+      duration: true,
+      elevationGain: true,
+      showSpeed: true,
+      user: {
+        select: {
+          username: true,
+          name: true,
+          avatar: true,
+          cover: true,
+        },
+      },
+    },
+  });
+
+  if (!activity) {
+    return {
+      title: "Actividad no encontrada",
+    };
+  }
+
+  const title = `${activity.name} de ${activity.user.name}`;
+  const description = [
+    formatActivityType(activity.type),
+    formatDistance(activity.distance),
+    activity.showSpeed
+      ? `${formatPace(activity.distance, activity.duration)}`
+      : null,
+    formatDuration(activity.duration),
+    activity.elevationGain !== null
+      ? `${Math.round(activity.elevationGain)} m+`
+      : null,
+  ]
+    .filter(Boolean)
+    .join(" - ");
+  const images = getMetadataImages(activity.user.cover, activity.user.avatar);
+  const url = `/${activity.user.username}/activity/${id}`;
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: url,
+    },
+    openGraph: {
+      title,
+      description,
+      type: "article",
+      url,
+      publishedTime: activity.date.toISOString(),
+      authors: [activity.user.name],
+      images,
+    },
+    twitter: {
+      card: images.length > 0 ? "summary_large_image" : "summary",
+      title,
+      description,
+      images,
+    },
+  };
+}
 
 export default async function PublicActivityPage({ params }: PageProps) {
   const { username, id } = await params;
@@ -137,6 +214,10 @@ export default async function PublicActivityPage({ params }: PageProps) {
         {activity.showSpeed ? (
           <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-5">
             <h2 className="text-lg font-semibold">Ritmos por kilometro</h2>
+            <p className="mt-1 text-sm text-zinc-500">
+              Calculados con tiempo en movimiento para acercarse a plataformas
+              como Strava.
+            </p>
             {splits.length > 0 ? (
               <div className="mt-4 overflow-x-auto">
                 <table className="w-full min-w-[520px] text-left text-sm">
@@ -266,4 +347,20 @@ function formatHeartRate(heartRate: number | null) {
 
 function formatCalories(calories: number | null) {
   return calories === null ? "--" : `${calories} kcal`;
+}
+
+function formatActivityType(type: string) {
+  const labels: Record<string, string> = {
+    run: "Run",
+    walk: "Caminata",
+    ride: "Bici",
+  };
+
+  return labels[type.toLowerCase()] ?? type;
+}
+
+function getMetadataImages(...urls: (string | null)[]) {
+  return urls
+    .filter((url): url is string => Boolean(url))
+    .map((url) => ({ url }));
 }

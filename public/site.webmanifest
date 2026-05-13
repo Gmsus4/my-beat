@@ -1,0 +1,21 @@
+{
+  "name": "Mybeat",
+  "short_name": "Mybeat",
+  "description": "Visualiza y comparte tus actividades deportivas desde archivos GPX.",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#050505",
+  "background_color": "#050505",
+  "display": "standalone",
+  "start_url": "/"
+}

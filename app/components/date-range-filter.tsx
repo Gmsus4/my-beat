@@ -8,18 +8,22 @@ import {
 type DateRangeFilterProps = {
   activeRange: ActivityDateRange;
   basePath: string;
+  activityType?: string | null;
 };
 
 export function DateRangeFilter({
   activeRange,
   basePath,
+  activityType,
 }: DateRangeFilterProps) {
   return (
     <div className="flex flex-wrap gap-2">
       {activityDateRanges.map((range) => {
         const isActive = range.value === activeRange;
-        const href =
-          range.value === "all" ? basePath : `${basePath}?range=${range.value}`;
+        const href = buildHref(basePath, {
+          range: range.value === "all" ? null : range.value,
+          type: activityType,
+        });
 
         return (
           <Link
@@ -37,4 +41,23 @@ export function DateRangeFilter({
       })}
     </div>
   );
+}
+
+function buildHref(
+  basePath: string,
+  params: { range?: string | null; type?: string | null },
+) {
+  const searchParams = new URLSearchParams();
+
+  if (params.range) {
+    searchParams.set("range", params.range);
+  }
+
+  if (params.type) {
+    searchParams.set("type", params.type);
+  }
+
+  const query = searchParams.toString();
+
+  return query ? `${basePath}?${query}` : basePath;
 }
