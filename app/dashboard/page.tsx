@@ -10,10 +10,6 @@ import {
   getActivityDateRangeLabel,
   normalizeActivityDateRange,
 } from "@/lib/activity-date-filter";
-import {
-  parseGpxBestEfforts,
-  type BestEffort,
-} from "@/lib/gpx/parse-activity";
 import { prisma } from "@/lib/prisma";
 
 type DashboardPageProps = {
@@ -56,7 +52,6 @@ export default async function DashboardPage({
             duration: true,
             elevationGain: true,
             avgHeartRate: true,
-            gpxData: true,
           },
         },
       },
@@ -77,7 +72,7 @@ export default async function DashboardPage({
   }
 
   const dashboardStats = getDashboardStats(user.activities);
-  const bestEfforts = await getDashboardBestEfforts(user.activities);
+  const bestEfforts = getDashboardBestEfforts(user.activities);
 
   return (
     <main className="px-6 py-10 text-white">
@@ -438,9 +433,10 @@ function getDashboardStats(
   };
 }
 
-async function getDashboardBestEfforts(
+function getDashboardBestEfforts(
   activities: {
-    gpxData: string | null;
+    distance: number;
+    duration: number;
   }[],
 ) {
   const targetDistances = [
@@ -455,29 +451,30 @@ async function getDashboardBestEfforts(
     21097.5,
     42195,
   ];
-  const bestEffortMap = new Map<number, BestEffort>();
 
-  for (const activity of activities) {
-    if (!activity.gpxData) {
-      continue;
-    }
+  return targetDistances.map((distance) => {
+    const best = activities.reduce<{ distance: number; duration: number } | null>(
+      (currentBest, activity) => {
+        if (activity.distance < distance || activity.distance <= 0) {
+          return currentBest;
+        }
 
-    const efforts = await parseGpxBestEfforts(
-      activity.gpxData,
-      targetDistances,
+        const estimatedDuration = Math.round(
+          activity.duration * (distance / activity.distance),
+        );
+
+        if (!currentBest || estimatedDuration < currentBest.duration) {
+          return { distance, duration: estimatedDuration };
+        }
+
+        return currentBest;
+      },
+      null,
     );
 
-    for (const effort of efforts) {
-      const current = bestEffortMap.get(effort.distance);
-
-      if (!current || effort.duration < current.duration) {
-        bestEffortMap.set(effort.distance, effort);
-      }
-    }
-  }
-
-  return targetDistances.map((distance) => ({
-    distance,
-    duration: bestEffortMap.get(distance)?.duration ?? null,
-  }));
+    return {
+      distance,
+      duration: best?.duration ?? null,
+    };
+  });
 }
