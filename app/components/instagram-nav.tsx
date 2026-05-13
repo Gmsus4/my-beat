@@ -30,8 +30,8 @@ export function InstagramNav({ user }: InstagramNavProps) {
     <>
       <aside className="hidden border-r border-zinc-900 bg-black px-3 py-6 lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col">
         <Link href={user ? "/dashboard" : "/"} className="mb-8 px-3">
-          <span className="text-2xl font-semibold tracking-normal">
-            My Stats
+          <span className="text-2xl font-semibold tracking-normal uppercase" >
+            Mybeat
           </span>
         </Link>
 

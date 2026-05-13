@@ -32,7 +32,7 @@ export default async function OnboardingPage() {
             Elige tu username publico.
           </h1>
           <p className="max-w-xl text-lg leading-8 text-zinc-300">
-            Este sera el enlace de tu perfil publico: my-stats.com/username.
+            Este sera el enlace de tu perfil publico: mybeat.me/username.
           </p>
         </div>
 

@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "My Stats",
+  title: "Mybeat",
   description: "Visualiza y comparte tus actividades deportivas desde archivos GPX.",
 };
 

@@ -196,7 +196,8 @@ function Landing() {
         <div className="space-y-8">
           <div className="space-y-4">
             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-orange-500">
-              My Stats
+              mybeat
+              {/* mybeat.me */}
             </p>
             <h1 className="max-w-3xl text-5xl font-semibold leading-tight tracking-normal sm:text-6xl">
               Tus rutas GPX convertidas en historias visuales.

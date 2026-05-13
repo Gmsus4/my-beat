@@ -32,7 +32,7 @@ export function GoogleLoginButton() {
       type="button"
       disabled={isLoading}
       onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
-      className="inline-flex h-12 items-center justify-center rounded-md bg-orange-500 px-5 text-sm font-semibold text-black transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-60"
+      className="inline-flex h-12 cursor-pointer items-center justify-center rounded-md bg-orange-500 px-5 text-sm font-semibold text-black transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-60"
     >
       {isLoading ? "Cargando..." : "Continuar con Google"}
     </button>
