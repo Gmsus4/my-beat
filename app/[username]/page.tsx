@@ -2,8 +2,21 @@ import Link from "next/link";
 import { getServerSession } from "next-auth/next";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import type { ReactNode } from "react";
+import {
+  FaFacebookF,
+  FaInstagram,
+  FaTiktok,
+  FaSpotify,
+  FaApple,
+  FaYoutube,
+  FaLinkedinIn,
+  FaTwitter,
+} from "react-icons/fa";
+import { SiStrava, SiYoutubemusic, SiThreads } from "react-icons/si";
 
 import { MiniRouteCanvas } from "@/app/[username]/mini-route-canvas";
+import { ProfileStatsPanel } from "@/app/[username]/profile-stats-panel";
 import { ActivityTypeFilter } from "@/app/components/activity-type-filter";
 import { DateRangeFilter } from "@/app/components/date-range-filter";
 import { FollowButton } from "@/app/components/follow-button";
@@ -13,6 +26,11 @@ import {
   normalizeActivityDateRange,
 } from "@/lib/activity-date-filter";
 import { authOptions } from "@/lib/auth";
+import {
+  bestEffortTargetDistances,
+  type BestEffort,
+} from "@/lib/gpx/parse-activity";
+import { readStoredBestEfforts } from "@/lib/gpx/stored-activity-data";
 import { prisma } from "@/lib/prisma";
 
 type PageProps = {
@@ -49,6 +67,16 @@ export async function generateMetadata({
       bio: true,
       avatar: true,
       cover: true,
+      socialPlatform1: true,
+      socialUrl1: true,
+      socialPlatform2: true,
+      socialUrl2: true,
+      socialPlatform3: true,
+      socialUrl3: true,
+      healthPlatform: true,
+      healthUrl: true,
+      musicPlatform: true,
+      musicUrl: true,
       _count: {
         select: {
           activities: { where: { isPublic: true } },
@@ -117,6 +145,16 @@ export default async function PublicProfilePage({
         avatar: true,
         cover: true,
         bio: true,
+        socialPlatform1: true,
+        socialUrl1: true,
+        socialPlatform2: true,
+        socialUrl2: true,
+        socialPlatform3: true,
+        socialUrl3: true,
+        healthPlatform: true,
+        healthUrl: true,
+        musicPlatform: true,
+        musicUrl: true,
         createdAt: true,
         _count: {
           select: {
@@ -146,6 +184,7 @@ export default async function PublicProfilePage({
             showHeartRate: true,
             showSpeed: true,
             showCalories: true,
+            bestEffortsData: true,
           },
         },
       },
@@ -186,6 +225,7 @@ export default async function PublicProfilePage({
     0,
   );
   const publicStats = getPublicProfileStats(user.activities);
+  const lifetimeStats = await getLifetimePublicStats(user.id);
   const medals = getPublicMedals(user.activities);
   const activities = user.activities;
 
@@ -204,7 +244,7 @@ export default async function PublicProfilePage({
               : undefined
           }
         />
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-6 pb-8">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-6 pb-8">
           <div className="-mt-8 flex flex-col gap-5 sm:-mt-10 sm:flex-row sm:items-end sm:justify-between">
             <div className="flex min-w-0 items-end gap-3 sm:gap-4">
               <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-950 !rounded-full text-2xl font-semibold text-orange-500 sm:h-24 sm:w-24 sm:text-3xl">
@@ -255,14 +295,28 @@ export default async function PublicProfilePage({
             <p className="max-w-2xl text-zinc-300">{user.bio}</p>
           ) : null}
 
-          <div className="grid gap-3 sm:grid-cols-3">
+          <SocialLinks
+            socialLinks={[
+              { platform: user.socialPlatform1, url: user.socialUrl1 },
+              { platform: user.socialPlatform2, url: user.socialUrl2 },
+              { platform: user.socialPlatform3, url: user.socialUrl3 },
+            ]}
+            healthPlatform={user.healthPlatform}
+            healthUrl={user.healthUrl}
+            musicPlatform={user.musicPlatform}
+            musicUrl={user.musicUrl}
+          />
+
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-3 text-sm text-zinc-400">
             <ProfileStat
               label="Actividades"
               value={user.activities.length.toString()}
+              icon="activities"
             />
             <ProfileStat
               label="Distancia"
               value={formatDistance(totalDistance)}
+              icon="distance"
             />
             <ProfileStat
               label="Desde"
@@ -270,200 +324,201 @@ export default async function PublicProfilePage({
                 month: "short",
                 year: "numeric",
               }).format(user.createdAt)}
+              icon="calendar"
             />
             <ProfileStat
               label="Seguidores"
               value={user._count.followers.toString()}
               href={isCurrentUser ? `/${user.username}/followers` : undefined}
+              icon="followers"
             />
             <ProfileStat
               label="Siguiendo"
               value={user._count.following.toString()}
               href={isCurrentUser ? `/${user.username}/following` : undefined}
+              icon="following"
             />
           </div>
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-6xl px-6 py-8">
-        <div className="mb-8 grid gap-4 lg:grid-cols-3">
-          <InsightCard
-            label="Equivalente"
-            value={`${publicStats.marathonEquivalent.toFixed(1)} maratones`}
-            detail="Usando 42.195 km como referencia."
-          />
-          <InsightCard
-            label="Actividad mas larga"
-            value={
-              publicStats.longestActivity
-                ? formatDistance(publicStats.longestActivity.distance)
-                : "--"
-            }
-            detail={publicStats.longestActivity?.name ?? "Sin actividades."}
-          />
-          <InsightCard
-            label="Tiempo total"
-            value={formatDuration(publicStats.totalDuration)}
-            detail={`En ${getActivityDateRangeLabel(activeRange)?.toLowerCase()}.`}
-          />
-        </div>
-
-        <div className="mb-8 grid gap-4 lg:grid-cols-3">
-          <InsightCard
-            label="Desnivel"
-            value={formatElevation(publicStats.totalElevation)}
-            detail="Elevacion positiva acumulada."
-          />
-          <InsightCard
-            label="Ritmo promedio"
-            value={formatPace(publicStats.totalDistance, publicStats.totalDuration)}
-            detail="Calculado con actividades visibles."
-          />
-          <InsightCard
-            label="Promedio por salida"
-            value={formatDistance(publicStats.averageDistance)}
-            detail="Distancia media por actividad publica."
-          />
-        </div>
-
-        <div className="mb-8 rounded-lg border border-zinc-800 bg-zinc-950 p-5">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-orange-500">
-                Medallas
-              </p>
-              <h2 className="mt-2 text-2xl font-semibold">Mejores marcas</h2>
+      <section className="mx-auto w-full max-w-7xl px-6 py-8">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(260px,300px)] lg:items-start">
+          <div className="order-2 min-w-0 lg:order-1">
+            <div className="mb-5 flex items-end justify-between">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-orange-500">
+                  Actividades
+                </p>
+                <h2 className="mt-2 text-2xl font-semibold">
+                  Publicas - {getActivityDateRangeLabel(activeRange)}
+                </h2>
+              </div>
             </div>
-            <p className="text-sm text-zinc-500">
-              Calculadas desde actividades publicas con ritmo visible.
-            </p>
+
+            <div className="mb-5 flex flex-wrap justify-between gap-3 rounded-lg border border-zinc-800 bg-zinc-950/95 p-3 lg:sticky lg:top-6 lg:z-20">
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+                  Fechas
+                </p>
+                <DateRangeFilter
+                  activeRange={activeRange}
+                  activityType={activeType}
+                  basePath={`/${user.username}`}
+                />
+              </div>
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+                  Tipo
+                </p>
+                <ActivityTypeFilter
+                  activeRange={activeRange}
+                  activeType={activeType}
+                  basePath={`/${user.username}`}
+                  types={activityTypes.map((activity) => activity.type)}
+                />
+              </div>
+            </div>
+
+            {activities.length > 0 ? (
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {activities.map((activity) => {
+                  const points = parsePolyline(activity.polyline);
+
+                  return (
+                    <Link
+                      key={activity.id}
+                      href={
+                        isCurrentUser
+                          ? `/dashboard/activity/${activity.id}`
+                          : `/${user.username}/activity/${activity.id}`
+                      }
+                      className="rounded-lg border border-zinc-800 bg-zinc-950 p-4 transition hover:border-orange-500/70"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-orange-500">
+                            {activity.type}
+                          </p>
+                          <h3 className="mt-2 text-lg font-semibold">
+                            {activity.name}
+                          </h3>
+                        </div>
+                        <p className="text-sm text-zinc-500">
+                          {isCurrentUser
+                            ? "Editar"
+                            : formatShortDate(activity.date)}
+                        </p>
+                      </div>
+
+                      {activity.showMap ? (
+                        <div className="mt-4">
+                          <MiniRouteCanvas points={points} />
+                        </div>
+                      ) : null}
+
+                      <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                        <ActivityStat
+                          label="Distancia"
+                          value={formatDistance(activity.distance)}
+                        />
+                        {activity.showSpeed ? (
+                          <ActivityStat
+                            label="Ritmo"
+                            value={formatPace(
+                              activity.distance,
+                              activity.duration,
+                            )}
+                          />
+                        ) : null}
+                        <ActivityStat
+                          label="Tiempo"
+                          value={formatDuration(activity.duration)}
+                        />
+                        <ActivityStat
+                          label="Elevacion"
+                          value={formatElevation(activity.elevationGain)}
+                        />
+                        {activity.showHeartRate ? (
+                          <ActivityStat
+                            label="FC"
+                            value={formatHeartRate(activity.avgHeartRate)}
+                          />
+                        ) : null}
+                        {activity.showCalories ? (
+                          <ActivityStat
+                            label="Calorias"
+                            value={formatCalories(activity.calories)}
+                          />
+                        ) : null}
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="rounded-lg border border-dashed border-zinc-800 bg-zinc-950/50 p-8">
+                <h3 className="text-xl font-semibold">
+                  Sin actividades publicas.
+                </h3>
+              </div>
+            )}
           </div>
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-            {medals.bestEfforts.map((effort) => (
-              <MedalCard
-                key={effort.distance}
-                label={formatRaceDistance(effort.distance)}
-                value={
-                  effort.duration
-                    ? formatDuration(effort.duration)
-                    : "Sin marca"
-                }
-                detail={
-                  effort.duration
-                    ? formatPace(effort.distance, effort.duration)
-                    : "Sube una actividad publica suficiente."
-                }
-              />
-            ))}
-          </div>
+          <aside className="order-1 lg:sticky lg:top-6 lg:order-2">
+            <ProfileStatsPanel>
+              <StatsTableSection title="Mejores tiempos">
+                {medals.bestEfforts.map((effort) => (
+                  <MedalTableRow
+                    key={effort.distance}
+                    label={formatRaceDistance(effort.distance)}
+                    duration={effort.duration}
+                  />
+                ))}
+              </StatsTableSection>
+
+              <StatsTableSection
+                title={getActivityDateRangeLabel(activeRange) ?? "Periodo"}
+              >
+                <StatsTableRow
+                  label="Actividades"
+                  value={user.activities.length.toString()}
+                />
+                <StatsTableRow
+                  label="Distancia"
+                  value={formatDistance(publicStats.totalDistance)}
+                />
+                <StatsTableRow
+                  label="Duracion"
+                  value={formatCompactDuration(publicStats.totalDuration)}
+                />
+                <StatsTableRow
+                  label="Desnivel positivo"
+                  value={formatElevation(publicStats.totalElevation)}
+                />
+              </StatsTableSection>
+
+              <StatsTableSection title="Totales">
+                <StatsTableRow
+                  label="Actividades"
+                  value={lifetimeStats.activityCount.toString()}
+                />
+                <StatsTableRow
+                  label="Distancia"
+                  value={formatDistance(lifetimeStats.totalDistance)}
+                />
+                <StatsTableRow
+                  label="Duracion"
+                  value={formatCompactDuration(lifetimeStats.totalDuration)}
+                />
+                <StatsTableRow
+                  label="Desnivel positivo"
+                  value={formatElevation(lifetimeStats.totalElevation)}
+                />
+              </StatsTableSection>
+            </ProfileStatsPanel>
+          </aside>
         </div>
-
-        <div className="mb-5 flex items-end justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-orange-500">
-              Actividades
-            </p>
-            <h2 className="mt-2 text-2xl font-semibold">
-              Publicas - {getActivityDateRangeLabel(activeRange)}
-            </h2>
-          </div>
-        </div>
-
-        <div className="mb-5 rounded-lg border border-zinc-800 bg-zinc-950 p-4">
-          <p className="mb-3 text-sm font-semibold text-zinc-400">Fechas</p>
-          <DateRangeFilter
-            activeRange={activeRange}
-            activityType={activeType}
-            basePath={`/${user.username}`}
-          />
-          <p className="mb-3 mt-5 text-sm font-semibold text-zinc-400">
-            Tipo de actividad
-          </p>
-          <ActivityTypeFilter
-            activeRange={activeRange}
-            activeType={activeType}
-            basePath={`/${user.username}`}
-            types={activityTypes.map((activity) => activity.type)}
-          />
-        </div>
-
-        {activities.length > 0 ? (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {activities.map((activity) => {
-              const points = parsePolyline(activity.polyline);
-
-              return (
-                <Link
-                  key={activity.id}
-                  href={
-                    isCurrentUser
-                      ? `/dashboard/activity/${activity.id}`
-                      : `/${user.username}/activity/${activity.id}`
-                  }
-                  className="rounded-lg border border-zinc-800 bg-zinc-950 p-4 transition hover:border-orange-500/70"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-orange-500">
-                        {activity.type}
-                      </p>
-                      <h3 className="mt-2 text-lg font-semibold">
-                        {activity.name}
-                      </h3>
-                    </div>
-                    <p className="text-sm text-zinc-500">
-                      {isCurrentUser ? "Editar" : formatShortDate(activity.date)}
-                    </p>
-                  </div>
-
-                  {activity.showMap ? (
-                    <div className="mt-4">
-                      <MiniRouteCanvas points={points} />
-                    </div>
-                  ) : null}
-
-                  <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                    <ActivityStat
-                      label="Distancia"
-                      value={formatDistance(activity.distance)}
-                    />
-                    {activity.showSpeed ? (
-                      <ActivityStat
-                        label="Ritmo"
-                        value={formatPace(activity.distance, activity.duration)}
-                      />
-                    ) : null}
-                    <ActivityStat
-                      label="Tiempo"
-                      value={formatDuration(activity.duration)}
-                    />
-                    <ActivityStat
-                      label="Elevacion"
-                      value={formatElevation(activity.elevationGain)}
-                    />
-                    {activity.showHeartRate ? (
-                      <ActivityStat
-                        label="FC"
-                        value={formatHeartRate(activity.avgHeartRate)}
-                      />
-                    ) : null}
-                    {activity.showCalories ? (
-                      <ActivityStat
-                        label="Calorias"
-                        value={formatCalories(activity.calories)}
-                      />
-                    ) : null}
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="rounded-lg border border-dashed border-zinc-800 bg-zinc-950/50 p-8">
-            <h3 className="text-xl font-semibold">Sin actividades publicas.</h3>
-          </div>
-        )}
       </section>
     </main>
   );
@@ -479,70 +534,364 @@ function ProfileStat({
   label,
   value,
   href,
+  icon,
 }: {
   label: string;
   value: string;
   href?: string;
+  icon: ProfileStatIcon;
 }) {
   const content = (
-    <>
-      <p className="text-sm text-zinc-500">{label}</p>
-      <p className="mt-1 text-xl font-semibold">{value}</p>
-    </>
+    <span className="inline-flex items-center gap-2">
+      <ProfileStatIcon name={icon} />
+      <span className="font-semibold text-white">{value}</span>
+      <span>{label.toLowerCase()}</span>
+    </span>
   );
 
   if (href) {
     return (
       <Link
         href={href}
-        className="rounded-lg border border-zinc-800 bg-zinc-950 p-4 transition hover:border-orange-500/70"
+        className="inline-flex items-center transition hover:text-orange-400"
       >
         {content}
       </Link>
     );
   }
 
+  return <div className="inline-flex items-center">{content}</div>;
+}
+
+type ProfileStatIcon =
+  | "activities"
+  | "distance"
+  | "calendar"
+  | "followers"
+  | "following";
+
+function ProfileStatIcon({ name }: { name: ProfileStatIcon }) {
+  const commonProps = {
+    className: "h-4 w-4 shrink-0 text-zinc-500",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 2,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+    "aria-hidden": true,
+  };
+
+  if (name === "activities") {
+    return (
+      <svg {...commonProps}>
+        <rect x="4" y="4" width="7" height="7" rx="1.5" />
+        <rect x="13" y="4" width="7" height="7" rx="1.5" />
+        <rect x="4" y="13" width="7" height="7" rx="1.5" />
+        <rect x="13" y="13" width="7" height="7" rx="1.5" />
+      </svg>
+    );
+  }
+
+  if (name === "distance") {
+    return (
+      <svg {...commonProps}>
+        <path d="M4 17c3-6 5-6 8 0s5 6 8 0" />
+        <circle cx="5" cy="7" r="2" />
+        <circle cx="19" cy="7" r="2" />
+      </svg>
+    );
+  }
+
+  if (name === "calendar") {
+    return (
+      <svg {...commonProps}>
+        <path d="M8 2v4" />
+        <path d="M16 2v4" />
+        <rect x="3" y="5" width="18" height="16" rx="2" />
+        <path d="M3 10h18" />
+      </svg>
+    );
+  }
+
+  if (name === "followers") {
+    return (
+      <svg {...commonProps}>
+        <path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" />
+        <circle cx="9.5" cy="7" r="4" />
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+    );
+  }
+
   return (
-    <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-4">
-      {content}
+    <svg {...commonProps}>
+      <path d="M20 21v-2a4 4 0 0 0-4-4h-5a4 4 0 0 0-4 4v2" />
+      <circle cx="13.5" cy="7" r="4" />
+      <path d="M3 8h4" />
+      <path d="M5 6v4" />
+    </svg>
+  );
+}
+
+function SocialLinks({
+  socialLinks,
+  healthPlatform,
+  healthUrl,
+  musicPlatform,
+  musicUrl,
+}: {
+  socialLinks: {
+    platform: string | null;
+    url: string | null;
+  }[];
+  healthPlatform: string | null;
+  healthUrl: string | null;
+  musicPlatform: string | null;
+  musicUrl: string | null;
+}) {
+  const links = [
+    ...socialLinks
+      .filter(
+        (link): link is { platform: string; url: string } =>
+          Boolean(link.platform && link.url),
+      )
+      .map((link) => ({
+        href: link.url,
+        label: getSocialPlatformLabel(link.platform),
+        icon: getSocialIcon(link.platform),
+      })),
+    healthUrl && healthPlatform
+      ? {
+          href: healthUrl,
+          label: getHealthPlatformLabel(healthPlatform),
+          icon: getHealthIcon(healthPlatform),
+        }
+      : null,
+    musicUrl && musicPlatform
+      ? {
+          href: musicUrl,
+          label: getMusicPlatformLabel(musicPlatform),
+          icon: getMusicIcon(musicPlatform),
+        }
+      : null,
+  ].filter((link): link is { href: string; label: string; icon: SocialIconName } =>
+    Boolean(link?.href),
+  );
+
+  if (links.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {links.map((link) => (
+        <a
+          key={link.label}
+          href={link.href}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex h-9 items-center gap-2 rounded-md border border-zinc-800 px-3 text-sm font-semibold text-zinc-200 transition hover:border-orange-500 hover:text-orange-400"
+        >
+          <SocialIcon name={link.icon} />
+          {link.label}
+        </a>
+      ))}
     </div>
   );
 }
 
-function InsightCard({
-  label,
-  value,
-  detail,
+type SocialIconName =
+  | "instagram"
+  | "facebook"
+  | "tiktok"
+  | "x"
+  | "youtube"
+  | "threads"
+  | "linkedin"
+  | "strava"
+  | "spotify"
+  | "youtubeMusic"
+  | "appleMusic"
+  | "health";
+
+function SocialIcon({ name }: { name: SocialIconName }) {
+  if (name === "instagram") {
+    return <FaInstagram className="h-4 w-4 shrink-0" aria-hidden="true" />;
+  }
+
+  if (name === "facebook") {
+    return <FaFacebookF className="h-4 w-4 shrink-0" aria-hidden="true" />;
+  }
+
+  if (name === "tiktok") {
+    return <FaTiktok className="h-4 w-4 shrink-0" aria-hidden="true" />;
+  }
+
+  if (name === "x") {
+    return <FaTwitter className="h-4 w-4 shrink-0" aria-hidden="true" />;
+  }
+
+  if (name === "youtube") {
+    return <FaYoutube className="h-4 w-4 shrink-0" aria-hidden="true" />;
+  }
+
+  if (name === "threads") {
+    return <SiThreads className="h-4 w-4 shrink-0" aria-hidden="true" />;
+  }
+
+  if (name === "linkedin") {
+    return <FaLinkedinIn className="h-4 w-4 shrink-0" aria-hidden="true" />;
+  }
+
+  if (name === "strava") {
+    return <SiStrava className="h-4 w-4 shrink-0" aria-hidden="true" />;
+  }
+
+  if (name === "spotify") {
+    return <FaSpotify className="h-4 w-4 shrink-0" aria-hidden="true" />;
+  }
+
+  if (name === "youtubeMusic") {
+    return <SiYoutubemusic className="h-4 w-4 shrink-0" aria-hidden="true" />;
+  }
+
+  if (name === "appleMusic") {
+    return <FaApple className="h-4 w-4 shrink-0" aria-hidden="true" />;
+  }
+
+  const commonProps = {
+    className: "h-4 w-4 shrink-0",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 2,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+    "aria-hidden": true,
+  };
+
+  return (
+    <svg {...commonProps}>
+      <path d="m8 16 4-10 4 10" />
+      <path d="m10.5 14 1.5 4 1.5-4" />
+    </svg>
+  );
+}
+
+function getHealthIcon(platform: string): SocialIconName {
+  return platform === "strava" ? "strava" : "health";
+}
+
+function getSocialIcon(platform: string): SocialIconName {
+  const icons: Record<string, SocialIconName> = {
+    instagram: "instagram",
+    facebook: "facebook",
+    tiktok: "tiktok",
+    x: "x",
+    youtube: "youtube",
+    threads: "threads",
+    linkedin: "linkedin",
+  };
+
+  return icons[platform] ?? "instagram";
+}
+
+function getSocialPlatformLabel(platform: string) {
+  const labels: Record<string, string> = {
+    instagram: "Instagram",
+    facebook: "Facebook",
+    tiktok: "TikTok",
+    x: "X",
+    youtube: "YouTube",
+    threads: "Threads",
+    linkedin: "LinkedIn",
+  };
+
+  return labels[platform] ?? "Red social";
+}
+
+function getMusicIcon(platform: string): SocialIconName {
+  if (platform === "spotify") {
+    return "spotify";
+  }
+
+  if (platform === "youtubeMusic") {
+    return "youtubeMusic";
+  }
+
+  if (platform === "appleMusic") {
+    return "appleMusic";
+  }
+
+  return "health";
+}
+
+function getHealthPlatformLabel(platform: string) {
+  const labels: Record<string, string> = {
+    strava: "Strava",
+    garmin: "Garmin",
+    adidas: "Adidas Running",
+    huawei: "Huawei Health",
+    nike: "Nike Run Club",
+    coros: "COROS",
+    polar: "Polar Flow",
+    suunto: "Suunto",
+  };
+
+  return labels[platform] ?? "Salud";
+}
+
+function getMusicPlatformLabel(platform: string) {
+  const labels: Record<string, string> = {
+    spotify: "Spotify",
+    youtubeMusic: "YouTube Music",
+    appleMusic: "Apple Music",
+  };
+
+  return labels[platform] ?? "Musica";
+}
+
+function StatsTableSection({
+  title,
+  children,
 }: {
-  label: string;
-  value: string;
-  detail: string;
+  title: string;
+  children: ReactNode;
 }) {
   return (
-    <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-5">
-      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-orange-500">
-        {label}
-      </p>
-      <p className="mt-3 text-2xl font-semibold">{value}</p>
-      <p className="mt-2 text-sm text-zinc-500">{detail}</p>
+    <div className="border-b border-zinc-800 pb-2 last:border-b-0 last:pb-0 [&+&]:pt-2">
+      <div className="bg-black px-3 py-2.5 text-sm font-semibold text-white">
+        {title}
+      </div>
+      <div className="divide-y divide-zinc-800">{children}</div>
     </div>
   );
 }
 
-function MedalCard({
+function StatsTableRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="grid grid-cols-[1fr_auto] gap-3 px-3 py-2 text-xs odd:bg-zinc-900/45 even:bg-black/30">
+      <span className="font-medium text-zinc-200">{label}</span>
+      <span className="font-semibold text-white">{value}</span>
+    </div>
+  );
+}
+
+function MedalTableRow({
   label,
-  value,
-  detail,
+  duration,
 }: {
   label: string;
-  value: string;
-  detail: string;
+  duration: number | null;
 }) {
   return (
-    <div className="rounded-lg border border-zinc-800 bg-black p-4">
-      <p className="text-sm font-semibold text-orange-500">{label}</p>
-      <p className="mt-2 text-xl font-semibold text-white">{value}</p>
-      <p className="mt-1 text-sm text-zinc-500">{detail}</p>
+    <div className="grid grid-cols-[1fr_auto] gap-3 px-3 py-2 text-xs odd:bg-black/30 even:bg-zinc-900/45">
+      <span className="font-medium text-zinc-200">{label}</span>
+      <span className="font-semibold text-orange-400">
+        {duration ? formatDuration(duration) : "--"}
+      </span>
     </div>
   );
 }
@@ -612,6 +961,17 @@ function formatDuration(totalSeconds: number) {
   }
 
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+}
+
+function formatCompactDuration(totalSeconds: number) {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+  if (hours > 0) {
+    return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+  }
+
+  return `${minutes}m`;
 }
 
 function formatElevation(elevation: number | null) {
@@ -712,47 +1072,80 @@ function getPublicMedals(
     duration: number;
     elevationGain: number | null;
     showSpeed: boolean;
+    bestEffortsData?: unknown;
   }[],
 ) {
-  const targetDistances = [
-    400,
-    804.672,
-    1000,
-    1609.344,
-    3218.688,
-    5000,
-    10000,
-    15000,
-    21097.5,
-    42195,
-  ];
   const visibleSpeedActivities = activities.filter((activity) => activity.showSpeed);
 
   return {
-    bestEfforts: targetDistances.map((distance) => {
-      const best = visibleSpeedActivities.reduce<{
-        distance: number;
-        duration: number;
-      } | null>((currentBest, activity) => {
-        if (activity.distance < distance || activity.distance <= 0) {
+    bestEfforts: bestEffortTargetDistances.map((distance) => {
+      const best = visibleSpeedActivities.reduce<BestEffort | null>(
+        (currentBest, activity) => {
+          const storedBestEffort = readStoredBestEfforts(
+            activity.bestEffortsData,
+          ).find((effort) => effort.distance === distance);
+          const candidate =
+            storedBestEffort ?? getEstimatedBestEffort(activity, distance);
+
+          if (!candidate) {
+            return currentBest;
+          }
+
+          if (!currentBest || candidate.duration < currentBest.duration) {
+            return candidate;
+          }
+
           return currentBest;
-        }
-
-        const estimatedDuration = Math.round(
-          activity.duration * (distance / activity.distance),
-        );
-
-        if (!currentBest || estimatedDuration < currentBest.duration) {
-          return { distance, duration: estimatedDuration };
-        }
-
-        return currentBest;
-      }, null);
+        },
+        null,
+      );
 
       return {
         distance,
         duration: best?.duration ?? null,
       };
     }),
+  };
+}
+
+function getEstimatedBestEffort(
+  activity: {
+    distance: number;
+    duration: number;
+  },
+  distance: number,
+) {
+  if (activity.distance < distance || activity.distance <= 0) {
+    return null;
+  }
+
+  const estimatedDuration = Math.round(
+    activity.duration * (distance / activity.distance),
+  );
+
+  return { distance, duration: estimatedDuration };
+}
+
+async function getLifetimePublicStats(userId: string) {
+  const result = await prisma.activity.aggregate({
+    where: {
+      userId,
+      isPublic: true,
+    },
+    _count: {
+      _all: true,
+    },
+    _sum: {
+      distance: true,
+      duration: true,
+      elevationGain: true,
+    },
+  });
+
+  return {
+    activityCount: result._count._all,
+    totalDistance: result._sum.distance ?? 0,
+    totalDuration: result._sum.duration ?? 0,
+    totalElevation: result._sum.elevationGain ?? 0,
   };
 }

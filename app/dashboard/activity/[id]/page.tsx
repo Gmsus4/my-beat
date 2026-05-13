@@ -1,12 +1,21 @@
 import { getServerSession } from "next-auth/next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { after } from "next/server";
 
+import { ActivityCharts } from "@/app/components/activity-charts";
 import { ActivitySettingsForm } from "@/app/dashboard/activity/[id]/activity-settings-form";
 import { DeleteActivityButton } from "@/app/dashboard/activity/[id]/delete-activity-button";
 import { RouteCanvas } from "@/app/dashboard/activity/[id]/route-canvas";
 import { authOptions } from "@/lib/auth";
-import { parseGpxKilometerSplits } from "@/lib/gpx/parse-activity";
+import {
+  parseGpxChartSeries,
+  parseGpxKilometerSplits,
+} from "@/lib/gpx/parse-activity";
+import {
+  readStoredChartPoints,
+  readStoredSplits,
+} from "@/lib/gpx/stored-activity-data";
 import { prisma } from "@/lib/prisma";
 
 type PageProps = {
@@ -54,6 +63,8 @@ export default async function ActivityDetailPage({ params }: PageProps) {
       showSpeed: true,
       showCalories: true,
       gpxData: true,
+      splitsData: true,
+      chartData: true,
       createdAt: true,
     },
   });
@@ -63,9 +74,36 @@ export default async function ActivityDetailPage({ params }: PageProps) {
   }
 
   const points = parsePolyline(activity.polyline);
-  const splits = activity.gpxData
-    ? await parseGpxKilometerSplits(activity.gpxData)
-    : [];
+  const storedSplits = readStoredSplits(activity.splitsData);
+  const storedChartPoints = readStoredChartPoints(activity.chartData);
+  const splits =
+    storedSplits.length > 0
+      ? storedSplits
+      : activity.gpxData
+        ? await parseGpxKilometerSplits(activity.gpxData)
+        : [];
+  const chartPoints =
+    storedChartPoints.length > 0
+      ? storedChartPoints
+      : activity.gpxData
+        ? await parseGpxChartSeries(activity.gpxData)
+        : [];
+
+  if (
+    activity.gpxData &&
+    (storedSplits.length === 0 || storedChartPoints.length === 0) &&
+    (splits.length > 0 || chartPoints.length > 0)
+  ) {
+    after(async () => {
+      await prisma.activity.update({
+        where: { id },
+        data: {
+          ...(storedSplits.length === 0 ? { splitsData: splits } : {}),
+          ...(storedChartPoints.length === 0 ? { chartData: chartPoints } : {}),
+        },
+      });
+    });
+  }
 
   return (
     <main className="px-6 py-10 text-white">
@@ -94,6 +132,12 @@ export default async function ActivityDetailPage({ params }: PageProps) {
         </div>
 
         {activity.showMap ? <RouteCanvas points={points} /> : null}
+
+        <ActivityCharts
+          points={chartPoints}
+          showHeartRate={activity.showHeartRate}
+          showSpeed={activity.showSpeed}
+        />
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Metric label="Distancia" value={formatDistance(activity.distance)} />

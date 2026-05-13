@@ -80,6 +80,16 @@ export const UserScalarFieldEnum = {
   avatar: 'avatar',
   cover: 'cover',
   bio: 'bio',
+  socialPlatform1: 'socialPlatform1',
+  socialUrl1: 'socialUrl1',
+  socialPlatform2: 'socialPlatform2',
+  socialUrl2: 'socialUrl2',
+  socialPlatform3: 'socialPlatform3',
+  socialUrl3: 'socialUrl3',
+  healthPlatform: 'healthPlatform',
+  healthUrl: 'healthUrl',
+  musicPlatform: 'musicPlatform',
+  musicUrl: 'musicUrl',
   createdAt: 'createdAt'
 } as const
 
@@ -103,6 +113,9 @@ export const ActivityScalarFieldEnum = {
   calories: 'calories',
   polyline: 'polyline',
   gpxData: 'gpxData',
+  splitsData: 'splitsData',
+  chartData: 'chartData',
+  bestEffortsData: 'bestEffortsData',
   isPublic: 'isPublic',
   showMap: 'showMap',
   showHeartRate: 'showHeartRate',
@@ -132,6 +145,14 @@ export const SortOrder = {
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 
+export const NullableJsonNullValueInput = {
+  DbNull: DbNull,
+  JsonNull: JsonNull
+} as const
+
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
 export const QueryMode = {
   default: 'default',
   insensitive: 'insensitive'
@@ -146,4 +167,13 @@ export const NullsOrder = {
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 

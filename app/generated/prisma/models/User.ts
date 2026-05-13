@@ -32,6 +32,16 @@ export type UserMinAggregateOutputType = {
   avatar: string | null
   cover: string | null
   bio: string | null
+  socialPlatform1: string | null
+  socialUrl1: string | null
+  socialPlatform2: string | null
+  socialUrl2: string | null
+  socialPlatform3: string | null
+  socialUrl3: string | null
+  healthPlatform: string | null
+  healthUrl: string | null
+  musicPlatform: string | null
+  musicUrl: string | null
   createdAt: Date | null
 }
 
@@ -43,6 +53,16 @@ export type UserMaxAggregateOutputType = {
   avatar: string | null
   cover: string | null
   bio: string | null
+  socialPlatform1: string | null
+  socialUrl1: string | null
+  socialPlatform2: string | null
+  socialUrl2: string | null
+  socialPlatform3: string | null
+  socialUrl3: string | null
+  healthPlatform: string | null
+  healthUrl: string | null
+  musicPlatform: string | null
+  musicUrl: string | null
   createdAt: Date | null
 }
 
@@ -54,6 +74,16 @@ export type UserCountAggregateOutputType = {
   avatar: number
   cover: number
   bio: number
+  socialPlatform1: number
+  socialUrl1: number
+  socialPlatform2: number
+  socialUrl2: number
+  socialPlatform3: number
+  socialUrl3: number
+  healthPlatform: number
+  healthUrl: number
+  musicPlatform: number
+  musicUrl: number
   createdAt: number
   _all: number
 }
@@ -67,6 +97,16 @@ export type UserMinAggregateInputType = {
   avatar?: true
   cover?: true
   bio?: true
+  socialPlatform1?: true
+  socialUrl1?: true
+  socialPlatform2?: true
+  socialUrl2?: true
+  socialPlatform3?: true
+  socialUrl3?: true
+  healthPlatform?: true
+  healthUrl?: true
+  musicPlatform?: true
+  musicUrl?: true
   createdAt?: true
 }
 
@@ -78,6 +118,16 @@ export type UserMaxAggregateInputType = {
   avatar?: true
   cover?: true
   bio?: true
+  socialPlatform1?: true
+  socialUrl1?: true
+  socialPlatform2?: true
+  socialUrl2?: true
+  socialPlatform3?: true
+  socialUrl3?: true
+  healthPlatform?: true
+  healthUrl?: true
+  musicPlatform?: true
+  musicUrl?: true
   createdAt?: true
 }
 
@@ -89,6 +139,16 @@ export type UserCountAggregateInputType = {
   avatar?: true
   cover?: true
   bio?: true
+  socialPlatform1?: true
+  socialUrl1?: true
+  socialPlatform2?: true
+  socialUrl2?: true
+  socialPlatform3?: true
+  socialUrl3?: true
+  healthPlatform?: true
+  healthUrl?: true
+  musicPlatform?: true
+  musicUrl?: true
   createdAt?: true
   _all?: true
 }
@@ -173,6 +233,16 @@ export type UserGroupByOutputType = {
   avatar: string | null
   cover: string | null
   bio: string | null
+  socialPlatform1: string | null
+  socialUrl1: string | null
+  socialPlatform2: string | null
+  socialUrl2: string | null
+  socialPlatform3: string | null
+  socialUrl3: string | null
+  healthPlatform: string | null
+  healthUrl: string | null
+  musicPlatform: string | null
+  musicUrl: string | null
   createdAt: Date
   _count: UserCountAggregateOutputType | null
   _min: UserMinAggregateOutputType | null
@@ -205,6 +275,16 @@ export type UserWhereInput = {
   avatar?: Prisma.StringNullableFilter<"User"> | string | null
   cover?: Prisma.StringNullableFilter<"User"> | string | null
   bio?: Prisma.StringNullableFilter<"User"> | string | null
+  socialPlatform1?: Prisma.StringNullableFilter<"User"> | string | null
+  socialUrl1?: Prisma.StringNullableFilter<"User"> | string | null
+  socialPlatform2?: Prisma.StringNullableFilter<"User"> | string | null
+  socialUrl2?: Prisma.StringNullableFilter<"User"> | string | null
+  socialPlatform3?: Prisma.StringNullableFilter<"User"> | string | null
+  socialUrl3?: Prisma.StringNullableFilter<"User"> | string | null
+  healthPlatform?: Prisma.StringNullableFilter<"User"> | string | null
+  healthUrl?: Prisma.StringNullableFilter<"User"> | string | null
+  musicPlatform?: Prisma.StringNullableFilter<"User"> | string | null
+  musicUrl?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   activities?: Prisma.ActivityListRelationFilter
   following?: Prisma.FollowListRelationFilter
@@ -219,6 +299,16 @@ export type UserOrderByWithRelationInput = {
   avatar?: Prisma.SortOrderInput | Prisma.SortOrder
   cover?: Prisma.SortOrderInput | Prisma.SortOrder
   bio?: Prisma.SortOrderInput | Prisma.SortOrder
+  socialPlatform1?: Prisma.SortOrderInput | Prisma.SortOrder
+  socialUrl1?: Prisma.SortOrderInput | Prisma.SortOrder
+  socialPlatform2?: Prisma.SortOrderInput | Prisma.SortOrder
+  socialUrl2?: Prisma.SortOrderInput | Prisma.SortOrder
+  socialPlatform3?: Prisma.SortOrderInput | Prisma.SortOrder
+  socialUrl3?: Prisma.SortOrderInput | Prisma.SortOrder
+  healthPlatform?: Prisma.SortOrderInput | Prisma.SortOrder
+  healthUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  musicPlatform?: Prisma.SortOrderInput | Prisma.SortOrder
+  musicUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   activities?: Prisma.ActivityOrderByRelationAggregateInput
   following?: Prisma.FollowOrderByRelationAggregateInput
@@ -236,6 +326,16 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   avatar?: Prisma.StringNullableFilter<"User"> | string | null
   cover?: Prisma.StringNullableFilter<"User"> | string | null
   bio?: Prisma.StringNullableFilter<"User"> | string | null
+  socialPlatform1?: Prisma.StringNullableFilter<"User"> | string | null
+  socialUrl1?: Prisma.StringNullableFilter<"User"> | string | null
+  socialPlatform2?: Prisma.StringNullableFilter<"User"> | string | null
+  socialUrl2?: Prisma.StringNullableFilter<"User"> | string | null
+  socialPlatform3?: Prisma.StringNullableFilter<"User"> | string | null
+  socialUrl3?: Prisma.StringNullableFilter<"User"> | string | null
+  healthPlatform?: Prisma.StringNullableFilter<"User"> | string | null
+  healthUrl?: Prisma.StringNullableFilter<"User"> | string | null
+  musicPlatform?: Prisma.StringNullableFilter<"User"> | string | null
+  musicUrl?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   activities?: Prisma.ActivityListRelationFilter
   following?: Prisma.FollowListRelationFilter
@@ -250,6 +350,16 @@ export type UserOrderByWithAggregationInput = {
   avatar?: Prisma.SortOrderInput | Prisma.SortOrder
   cover?: Prisma.SortOrderInput | Prisma.SortOrder
   bio?: Prisma.SortOrderInput | Prisma.SortOrder
+  socialPlatform1?: Prisma.SortOrderInput | Prisma.SortOrder
+  socialUrl1?: Prisma.SortOrderInput | Prisma.SortOrder
+  socialPlatform2?: Prisma.SortOrderInput | Prisma.SortOrder
+  socialUrl2?: Prisma.SortOrderInput | Prisma.SortOrder
+  socialPlatform3?: Prisma.SortOrderInput | Prisma.SortOrder
+  socialUrl3?: Prisma.SortOrderInput | Prisma.SortOrder
+  healthPlatform?: Prisma.SortOrderInput | Prisma.SortOrder
+  healthUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  musicPlatform?: Prisma.SortOrderInput | Prisma.SortOrder
+  musicUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.UserCountOrderByAggregateInput
   _max?: Prisma.UserMaxOrderByAggregateInput
@@ -267,6 +377,16 @@ export type UserScalarWhereWithAggregatesInput = {
   avatar?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   cover?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   bio?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  socialPlatform1?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  socialUrl1?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  socialPlatform2?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  socialUrl2?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  socialPlatform3?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  socialUrl3?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  healthPlatform?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  healthUrl?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  musicPlatform?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  musicUrl?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
 }
 
@@ -278,6 +398,16 @@ export type UserCreateInput = {
   avatar?: string | null
   cover?: string | null
   bio?: string | null
+  socialPlatform1?: string | null
+  socialUrl1?: string | null
+  socialPlatform2?: string | null
+  socialUrl2?: string | null
+  socialPlatform3?: string | null
+  socialUrl3?: string | null
+  healthPlatform?: string | null
+  healthUrl?: string | null
+  musicPlatform?: string | null
+  musicUrl?: string | null
   createdAt?: Date | string
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   following?: Prisma.FollowCreateNestedManyWithoutFollowerInput
@@ -292,6 +422,16 @@ export type UserUncheckedCreateInput = {
   avatar?: string | null
   cover?: string | null
   bio?: string | null
+  socialPlatform1?: string | null
+  socialUrl1?: string | null
+  socialPlatform2?: string | null
+  socialUrl2?: string | null
+  socialPlatform3?: string | null
+  socialUrl3?: string | null
+  healthPlatform?: string | null
+  healthUrl?: string | null
+  musicPlatform?: string | null
+  musicUrl?: string | null
   createdAt?: Date | string
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   following?: Prisma.FollowUncheckedCreateNestedManyWithoutFollowerInput
@@ -306,6 +446,16 @@ export type UserUpdateInput = {
   avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cover?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialPlatform1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialUrl1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialPlatform2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialUrl2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialPlatform3?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialUrl3?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  healthPlatform?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  healthUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  musicPlatform?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  musicUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   following?: Prisma.FollowUpdateManyWithoutFollowerNestedInput
@@ -320,6 +470,16 @@ export type UserUncheckedUpdateInput = {
   avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cover?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialPlatform1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialUrl1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialPlatform2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialUrl2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialPlatform3?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialUrl3?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  healthPlatform?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  healthUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  musicPlatform?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  musicUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   following?: Prisma.FollowUncheckedUpdateManyWithoutFollowerNestedInput
@@ -334,6 +494,16 @@ export type UserCreateManyInput = {
   avatar?: string | null
   cover?: string | null
   bio?: string | null
+  socialPlatform1?: string | null
+  socialUrl1?: string | null
+  socialPlatform2?: string | null
+  socialUrl2?: string | null
+  socialPlatform3?: string | null
+  socialUrl3?: string | null
+  healthPlatform?: string | null
+  healthUrl?: string | null
+  musicPlatform?: string | null
+  musicUrl?: string | null
   createdAt?: Date | string
 }
 
@@ -345,6 +515,16 @@ export type UserUpdateManyMutationInput = {
   avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cover?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialPlatform1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialUrl1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialPlatform2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialUrl2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialPlatform3?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialUrl3?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  healthPlatform?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  healthUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  musicPlatform?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  musicUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -356,6 +536,16 @@ export type UserUncheckedUpdateManyInput = {
   avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cover?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialPlatform1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialUrl1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialPlatform2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialUrl2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialPlatform3?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialUrl3?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  healthPlatform?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  healthUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  musicPlatform?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  musicUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -367,6 +557,16 @@ export type UserCountOrderByAggregateInput = {
   avatar?: Prisma.SortOrder
   cover?: Prisma.SortOrder
   bio?: Prisma.SortOrder
+  socialPlatform1?: Prisma.SortOrder
+  socialUrl1?: Prisma.SortOrder
+  socialPlatform2?: Prisma.SortOrder
+  socialUrl2?: Prisma.SortOrder
+  socialPlatform3?: Prisma.SortOrder
+  socialUrl3?: Prisma.SortOrder
+  healthPlatform?: Prisma.SortOrder
+  healthUrl?: Prisma.SortOrder
+  musicPlatform?: Prisma.SortOrder
+  musicUrl?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -378,6 +578,16 @@ export type UserMaxOrderByAggregateInput = {
   avatar?: Prisma.SortOrder
   cover?: Prisma.SortOrder
   bio?: Prisma.SortOrder
+  socialPlatform1?: Prisma.SortOrder
+  socialUrl1?: Prisma.SortOrder
+  socialPlatform2?: Prisma.SortOrder
+  socialUrl2?: Prisma.SortOrder
+  socialPlatform3?: Prisma.SortOrder
+  socialUrl3?: Prisma.SortOrder
+  healthPlatform?: Prisma.SortOrder
+  healthUrl?: Prisma.SortOrder
+  musicPlatform?: Prisma.SortOrder
+  musicUrl?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -389,6 +599,16 @@ export type UserMinOrderByAggregateInput = {
   avatar?: Prisma.SortOrder
   cover?: Prisma.SortOrder
   bio?: Prisma.SortOrder
+  socialPlatform1?: Prisma.SortOrder
+  socialUrl1?: Prisma.SortOrder
+  socialPlatform2?: Prisma.SortOrder
+  socialUrl2?: Prisma.SortOrder
+  socialPlatform3?: Prisma.SortOrder
+  socialUrl3?: Prisma.SortOrder
+  healthPlatform?: Prisma.SortOrder
+  healthUrl?: Prisma.SortOrder
+  musicPlatform?: Prisma.SortOrder
+  musicUrl?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -459,6 +679,16 @@ export type UserCreateWithoutActivitiesInput = {
   avatar?: string | null
   cover?: string | null
   bio?: string | null
+  socialPlatform1?: string | null
+  socialUrl1?: string | null
+  socialPlatform2?: string | null
+  socialUrl2?: string | null
+  socialPlatform3?: string | null
+  socialUrl3?: string | null
+  healthPlatform?: string | null
+  healthUrl?: string | null
+  musicPlatform?: string | null
+  musicUrl?: string | null
   createdAt?: Date | string
   following?: Prisma.FollowCreateNestedManyWithoutFollowerInput
   followers?: Prisma.FollowCreateNestedManyWithoutFollowingInput
@@ -472,6 +702,16 @@ export type UserUncheckedCreateWithoutActivitiesInput = {
   avatar?: string | null
   cover?: string | null
   bio?: string | null
+  socialPlatform1?: string | null
+  socialUrl1?: string | null
+  socialPlatform2?: string | null
+  socialUrl2?: string | null
+  socialPlatform3?: string | null
+  socialUrl3?: string | null
+  healthPlatform?: string | null
+  healthUrl?: string | null
+  musicPlatform?: string | null
+  musicUrl?: string | null
   createdAt?: Date | string
   following?: Prisma.FollowUncheckedCreateNestedManyWithoutFollowerInput
   followers?: Prisma.FollowUncheckedCreateNestedManyWithoutFollowingInput
@@ -501,6 +741,16 @@ export type UserUpdateWithoutActivitiesInput = {
   avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cover?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialPlatform1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialUrl1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialPlatform2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialUrl2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialPlatform3?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialUrl3?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  healthPlatform?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  healthUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  musicPlatform?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  musicUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   following?: Prisma.FollowUpdateManyWithoutFollowerNestedInput
   followers?: Prisma.FollowUpdateManyWithoutFollowingNestedInput
@@ -514,6 +764,16 @@ export type UserUncheckedUpdateWithoutActivitiesInput = {
   avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cover?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialPlatform1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialUrl1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialPlatform2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialUrl2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialPlatform3?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialUrl3?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  healthPlatform?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  healthUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  musicPlatform?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  musicUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   following?: Prisma.FollowUncheckedUpdateManyWithoutFollowerNestedInput
   followers?: Prisma.FollowUncheckedUpdateManyWithoutFollowingNestedInput
@@ -527,6 +787,16 @@ export type UserCreateWithoutFollowingInput = {
   avatar?: string | null
   cover?: string | null
   bio?: string | null
+  socialPlatform1?: string | null
+  socialUrl1?: string | null
+  socialPlatform2?: string | null
+  socialUrl2?: string | null
+  socialPlatform3?: string | null
+  socialUrl3?: string | null
+  healthPlatform?: string | null
+  healthUrl?: string | null
+  musicPlatform?: string | null
+  musicUrl?: string | null
   createdAt?: Date | string
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   followers?: Prisma.FollowCreateNestedManyWithoutFollowingInput
@@ -540,6 +810,16 @@ export type UserUncheckedCreateWithoutFollowingInput = {
   avatar?: string | null
   cover?: string | null
   bio?: string | null
+  socialPlatform1?: string | null
+  socialUrl1?: string | null
+  socialPlatform2?: string | null
+  socialUrl2?: string | null
+  socialPlatform3?: string | null
+  socialUrl3?: string | null
+  healthPlatform?: string | null
+  healthUrl?: string | null
+  musicPlatform?: string | null
+  musicUrl?: string | null
   createdAt?: Date | string
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   followers?: Prisma.FollowUncheckedCreateNestedManyWithoutFollowingInput
@@ -558,6 +838,16 @@ export type UserCreateWithoutFollowersInput = {
   avatar?: string | null
   cover?: string | null
   bio?: string | null
+  socialPlatform1?: string | null
+  socialUrl1?: string | null
+  socialPlatform2?: string | null
+  socialUrl2?: string | null
+  socialPlatform3?: string | null
+  socialUrl3?: string | null
+  healthPlatform?: string | null
+  healthUrl?: string | null
+  musicPlatform?: string | null
+  musicUrl?: string | null
   createdAt?: Date | string
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   following?: Prisma.FollowCreateNestedManyWithoutFollowerInput
@@ -571,6 +861,16 @@ export type UserUncheckedCreateWithoutFollowersInput = {
   avatar?: string | null
   cover?: string | null
   bio?: string | null
+  socialPlatform1?: string | null
+  socialUrl1?: string | null
+  socialPlatform2?: string | null
+  socialUrl2?: string | null
+  socialPlatform3?: string | null
+  socialUrl3?: string | null
+  healthPlatform?: string | null
+  healthUrl?: string | null
+  musicPlatform?: string | null
+  musicUrl?: string | null
   createdAt?: Date | string
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   following?: Prisma.FollowUncheckedCreateNestedManyWithoutFollowerInput
@@ -600,6 +900,16 @@ export type UserUpdateWithoutFollowingInput = {
   avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cover?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialPlatform1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialUrl1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialPlatform2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialUrl2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialPlatform3?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialUrl3?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  healthPlatform?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  healthUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  musicPlatform?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  musicUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   followers?: Prisma.FollowUpdateManyWithoutFollowingNestedInput
@@ -613,6 +923,16 @@ export type UserUncheckedUpdateWithoutFollowingInput = {
   avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cover?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialPlatform1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialUrl1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialPlatform2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialUrl2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialPlatform3?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialUrl3?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  healthPlatform?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  healthUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  musicPlatform?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  musicUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   followers?: Prisma.FollowUncheckedUpdateManyWithoutFollowingNestedInput
@@ -637,6 +957,16 @@ export type UserUpdateWithoutFollowersInput = {
   avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cover?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialPlatform1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialUrl1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialPlatform2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialUrl2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialPlatform3?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialUrl3?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  healthPlatform?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  healthUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  musicPlatform?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  musicUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   following?: Prisma.FollowUpdateManyWithoutFollowerNestedInput
@@ -650,6 +980,16 @@ export type UserUncheckedUpdateWithoutFollowersInput = {
   avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cover?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialPlatform1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialUrl1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialPlatform2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialUrl2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialPlatform3?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialUrl3?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  healthPlatform?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  healthUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  musicPlatform?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  musicUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   following?: Prisma.FollowUncheckedUpdateManyWithoutFollowerNestedInput
@@ -712,6 +1052,16 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   avatar?: boolean
   cover?: boolean
   bio?: boolean
+  socialPlatform1?: boolean
+  socialUrl1?: boolean
+  socialPlatform2?: boolean
+  socialUrl2?: boolean
+  socialPlatform3?: boolean
+  socialUrl3?: boolean
+  healthPlatform?: boolean
+  healthUrl?: boolean
+  musicPlatform?: boolean
+  musicUrl?: boolean
   createdAt?: boolean
   activities?: boolean | Prisma.User$activitiesArgs<ExtArgs>
   following?: boolean | Prisma.User$followingArgs<ExtArgs>
@@ -727,6 +1077,16 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   avatar?: boolean
   cover?: boolean
   bio?: boolean
+  socialPlatform1?: boolean
+  socialUrl1?: boolean
+  socialPlatform2?: boolean
+  socialUrl2?: boolean
+  socialPlatform3?: boolean
+  socialUrl3?: boolean
+  healthPlatform?: boolean
+  healthUrl?: boolean
+  musicPlatform?: boolean
+  musicUrl?: boolean
   createdAt?: boolean
 }, ExtArgs["result"]["user"]>
 
@@ -738,6 +1098,16 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   avatar?: boolean
   cover?: boolean
   bio?: boolean
+  socialPlatform1?: boolean
+  socialUrl1?: boolean
+  socialPlatform2?: boolean
+  socialUrl2?: boolean
+  socialPlatform3?: boolean
+  socialUrl3?: boolean
+  healthPlatform?: boolean
+  healthUrl?: boolean
+  musicPlatform?: boolean
+  musicUrl?: boolean
   createdAt?: boolean
 }, ExtArgs["result"]["user"]>
 
@@ -749,10 +1119,20 @@ export type UserSelectScalar = {
   avatar?: boolean
   cover?: boolean
   bio?: boolean
+  socialPlatform1?: boolean
+  socialUrl1?: boolean
+  socialPlatform2?: boolean
+  socialUrl2?: boolean
+  socialPlatform3?: boolean
+  socialUrl3?: boolean
+  healthPlatform?: boolean
+  healthUrl?: boolean
+  musicPlatform?: boolean
+  musicUrl?: boolean
   createdAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "username" | "name" | "avatar" | "cover" | "bio" | "createdAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "username" | "name" | "avatar" | "cover" | "bio" | "socialPlatform1" | "socialUrl1" | "socialPlatform2" | "socialUrl2" | "socialPlatform3" | "socialUrl3" | "healthPlatform" | "healthUrl" | "musicPlatform" | "musicUrl" | "createdAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   activities?: boolean | Prisma.User$activitiesArgs<ExtArgs>
   following?: boolean | Prisma.User$followingArgs<ExtArgs>
@@ -777,6 +1157,16 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     avatar: string | null
     cover: string | null
     bio: string | null
+    socialPlatform1: string | null
+    socialUrl1: string | null
+    socialPlatform2: string | null
+    socialUrl2: string | null
+    socialPlatform3: string | null
+    socialUrl3: string | null
+    healthPlatform: string | null
+    healthUrl: string | null
+    musicPlatform: string | null
+    musicUrl: string | null
     createdAt: Date
   }, ExtArgs["result"]["user"]>
   composites: {}
@@ -1211,6 +1601,16 @@ export interface UserFieldRefs {
   readonly avatar: Prisma.FieldRef<"User", 'String'>
   readonly cover: Prisma.FieldRef<"User", 'String'>
   readonly bio: Prisma.FieldRef<"User", 'String'>
+  readonly socialPlatform1: Prisma.FieldRef<"User", 'String'>
+  readonly socialUrl1: Prisma.FieldRef<"User", 'String'>
+  readonly socialPlatform2: Prisma.FieldRef<"User", 'String'>
+  readonly socialUrl2: Prisma.FieldRef<"User", 'String'>
+  readonly socialPlatform3: Prisma.FieldRef<"User", 'String'>
+  readonly socialUrl3: Prisma.FieldRef<"User", 'String'>
+  readonly healthPlatform: Prisma.FieldRef<"User", 'String'>
+  readonly healthUrl: Prisma.FieldRef<"User", 'String'>
+  readonly musicPlatform: Prisma.FieldRef<"User", 'String'>
+  readonly musicUrl: Prisma.FieldRef<"User", 'String'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
 }
     

@@ -115,6 +115,9 @@ export type ActivityCountAggregateOutputType = {
   calories: number
   polyline: number
   gpxData: number
+  splitsData: number
+  chartData: number
+  bestEffortsData: number
   isPublic: number
   showMap: number
   showHeartRate: number
@@ -214,6 +217,9 @@ export type ActivityCountAggregateInputType = {
   calories?: true
   polyline?: true
   gpxData?: true
+  splitsData?: true
+  chartData?: true
+  bestEffortsData?: true
   isPublic?: true
   showMap?: true
   showHeartRate?: true
@@ -326,6 +332,9 @@ export type ActivityGroupByOutputType = {
   calories: number | null
   polyline: string | null
   gpxData: string | null
+  splitsData: runtime.JsonValue | null
+  chartData: runtime.JsonValue | null
+  bestEffortsData: runtime.JsonValue | null
   isPublic: boolean
   showMap: boolean
   showHeartRate: boolean
@@ -374,6 +383,9 @@ export type ActivityWhereInput = {
   calories?: Prisma.IntNullableFilter<"Activity"> | number | null
   polyline?: Prisma.StringNullableFilter<"Activity"> | string | null
   gpxData?: Prisma.StringNullableFilter<"Activity"> | string | null
+  splitsData?: Prisma.JsonNullableFilter<"Activity">
+  chartData?: Prisma.JsonNullableFilter<"Activity">
+  bestEffortsData?: Prisma.JsonNullableFilter<"Activity">
   isPublic?: Prisma.BoolFilter<"Activity"> | boolean
   showMap?: Prisma.BoolFilter<"Activity"> | boolean
   showHeartRate?: Prisma.BoolFilter<"Activity"> | boolean
@@ -400,6 +412,9 @@ export type ActivityOrderByWithRelationInput = {
   calories?: Prisma.SortOrderInput | Prisma.SortOrder
   polyline?: Prisma.SortOrderInput | Prisma.SortOrder
   gpxData?: Prisma.SortOrderInput | Prisma.SortOrder
+  splitsData?: Prisma.SortOrderInput | Prisma.SortOrder
+  chartData?: Prisma.SortOrderInput | Prisma.SortOrder
+  bestEffortsData?: Prisma.SortOrderInput | Prisma.SortOrder
   isPublic?: Prisma.SortOrder
   showMap?: Prisma.SortOrder
   showHeartRate?: Prisma.SortOrder
@@ -429,6 +444,9 @@ export type ActivityWhereUniqueInput = Prisma.AtLeast<{
   calories?: Prisma.IntNullableFilter<"Activity"> | number | null
   polyline?: Prisma.StringNullableFilter<"Activity"> | string | null
   gpxData?: Prisma.StringNullableFilter<"Activity"> | string | null
+  splitsData?: Prisma.JsonNullableFilter<"Activity">
+  chartData?: Prisma.JsonNullableFilter<"Activity">
+  bestEffortsData?: Prisma.JsonNullableFilter<"Activity">
   isPublic?: Prisma.BoolFilter<"Activity"> | boolean
   showMap?: Prisma.BoolFilter<"Activity"> | boolean
   showHeartRate?: Prisma.BoolFilter<"Activity"> | boolean
@@ -455,6 +473,9 @@ export type ActivityOrderByWithAggregationInput = {
   calories?: Prisma.SortOrderInput | Prisma.SortOrder
   polyline?: Prisma.SortOrderInput | Prisma.SortOrder
   gpxData?: Prisma.SortOrderInput | Prisma.SortOrder
+  splitsData?: Prisma.SortOrderInput | Prisma.SortOrder
+  chartData?: Prisma.SortOrderInput | Prisma.SortOrder
+  bestEffortsData?: Prisma.SortOrderInput | Prisma.SortOrder
   isPublic?: Prisma.SortOrder
   showMap?: Prisma.SortOrder
   showHeartRate?: Prisma.SortOrder
@@ -488,6 +509,9 @@ export type ActivityScalarWhereWithAggregatesInput = {
   calories?: Prisma.IntNullableWithAggregatesFilter<"Activity"> | number | null
   polyline?: Prisma.StringNullableWithAggregatesFilter<"Activity"> | string | null
   gpxData?: Prisma.StringNullableWithAggregatesFilter<"Activity"> | string | null
+  splitsData?: Prisma.JsonNullableWithAggregatesFilter<"Activity">
+  chartData?: Prisma.JsonNullableWithAggregatesFilter<"Activity">
+  bestEffortsData?: Prisma.JsonNullableWithAggregatesFilter<"Activity">
   isPublic?: Prisma.BoolWithAggregatesFilter<"Activity"> | boolean
   showMap?: Prisma.BoolWithAggregatesFilter<"Activity"> | boolean
   showHeartRate?: Prisma.BoolWithAggregatesFilter<"Activity"> | boolean
@@ -512,6 +536,9 @@ export type ActivityCreateInput = {
   calories?: number | null
   polyline?: string | null
   gpxData?: string | null
+  splitsData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  chartData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  bestEffortsData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   isPublic?: boolean
   showMap?: boolean
   showHeartRate?: boolean
@@ -538,6 +565,9 @@ export type ActivityUncheckedCreateInput = {
   calories?: number | null
   polyline?: string | null
   gpxData?: string | null
+  splitsData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  chartData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  bestEffortsData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   isPublic?: boolean
   showMap?: boolean
   showHeartRate?: boolean
@@ -562,6 +592,9 @@ export type ActivityUpdateInput = {
   calories?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   polyline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gpxData?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  splitsData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  chartData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  bestEffortsData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
   showMap?: Prisma.BoolFieldUpdateOperationsInput | boolean
   showHeartRate?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -588,6 +621,9 @@ export type ActivityUncheckedUpdateInput = {
   calories?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   polyline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gpxData?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  splitsData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  chartData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  bestEffortsData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
   showMap?: Prisma.BoolFieldUpdateOperationsInput | boolean
   showHeartRate?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -613,6 +649,9 @@ export type ActivityCreateManyInput = {
   calories?: number | null
   polyline?: string | null
   gpxData?: string | null
+  splitsData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  chartData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  bestEffortsData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   isPublic?: boolean
   showMap?: boolean
   showHeartRate?: boolean
@@ -637,6 +676,9 @@ export type ActivityUpdateManyMutationInput = {
   calories?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   polyline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gpxData?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  splitsData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  chartData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  bestEffortsData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
   showMap?: Prisma.BoolFieldUpdateOperationsInput | boolean
   showHeartRate?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -662,6 +704,9 @@ export type ActivityUncheckedUpdateManyInput = {
   calories?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   polyline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gpxData?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  splitsData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  chartData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  bestEffortsData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
   showMap?: Prisma.BoolFieldUpdateOperationsInput | boolean
   showHeartRate?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -697,6 +742,9 @@ export type ActivityCountOrderByAggregateInput = {
   calories?: Prisma.SortOrder
   polyline?: Prisma.SortOrder
   gpxData?: Prisma.SortOrder
+  splitsData?: Prisma.SortOrder
+  chartData?: Prisma.SortOrder
+  bestEffortsData?: Prisma.SortOrder
   isPublic?: Prisma.SortOrder
   showMap?: Prisma.SortOrder
   showHeartRate?: Prisma.SortOrder
@@ -871,6 +919,9 @@ export type ActivityCreateWithoutUserInput = {
   calories?: number | null
   polyline?: string | null
   gpxData?: string | null
+  splitsData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  chartData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  bestEffortsData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   isPublic?: boolean
   showMap?: boolean
   showHeartRate?: boolean
@@ -895,6 +946,9 @@ export type ActivityUncheckedCreateWithoutUserInput = {
   calories?: number | null
   polyline?: string | null
   gpxData?: string | null
+  splitsData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  chartData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  bestEffortsData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   isPublic?: boolean
   showMap?: boolean
   showHeartRate?: boolean
@@ -949,6 +1003,9 @@ export type ActivityScalarWhereInput = {
   calories?: Prisma.IntNullableFilter<"Activity"> | number | null
   polyline?: Prisma.StringNullableFilter<"Activity"> | string | null
   gpxData?: Prisma.StringNullableFilter<"Activity"> | string | null
+  splitsData?: Prisma.JsonNullableFilter<"Activity">
+  chartData?: Prisma.JsonNullableFilter<"Activity">
+  bestEffortsData?: Prisma.JsonNullableFilter<"Activity">
   isPublic?: Prisma.BoolFilter<"Activity"> | boolean
   showMap?: Prisma.BoolFilter<"Activity"> | boolean
   showHeartRate?: Prisma.BoolFilter<"Activity"> | boolean
@@ -973,6 +1030,9 @@ export type ActivityCreateManyUserInput = {
   calories?: number | null
   polyline?: string | null
   gpxData?: string | null
+  splitsData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  chartData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  bestEffortsData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   isPublic?: boolean
   showMap?: boolean
   showHeartRate?: boolean
@@ -997,6 +1057,9 @@ export type ActivityUpdateWithoutUserInput = {
   calories?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   polyline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gpxData?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  splitsData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  chartData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  bestEffortsData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
   showMap?: Prisma.BoolFieldUpdateOperationsInput | boolean
   showHeartRate?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1021,6 +1084,9 @@ export type ActivityUncheckedUpdateWithoutUserInput = {
   calories?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   polyline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gpxData?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  splitsData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  chartData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  bestEffortsData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
   showMap?: Prisma.BoolFieldUpdateOperationsInput | boolean
   showHeartRate?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1045,6 +1111,9 @@ export type ActivityUncheckedUpdateManyWithoutUserInput = {
   calories?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   polyline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gpxData?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  splitsData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  chartData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  bestEffortsData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
   showMap?: Prisma.BoolFieldUpdateOperationsInput | boolean
   showHeartRate?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1072,6 +1141,9 @@ export type ActivitySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   calories?: boolean
   polyline?: boolean
   gpxData?: boolean
+  splitsData?: boolean
+  chartData?: boolean
+  bestEffortsData?: boolean
   isPublic?: boolean
   showMap?: boolean
   showHeartRate?: boolean
@@ -1098,6 +1170,9 @@ export type ActivitySelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   calories?: boolean
   polyline?: boolean
   gpxData?: boolean
+  splitsData?: boolean
+  chartData?: boolean
+  bestEffortsData?: boolean
   isPublic?: boolean
   showMap?: boolean
   showHeartRate?: boolean
@@ -1124,6 +1199,9 @@ export type ActivitySelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   calories?: boolean
   polyline?: boolean
   gpxData?: boolean
+  splitsData?: boolean
+  chartData?: boolean
+  bestEffortsData?: boolean
   isPublic?: boolean
   showMap?: boolean
   showHeartRate?: boolean
@@ -1150,6 +1228,9 @@ export type ActivitySelectScalar = {
   calories?: boolean
   polyline?: boolean
   gpxData?: boolean
+  splitsData?: boolean
+  chartData?: boolean
+  bestEffortsData?: boolean
   isPublic?: boolean
   showMap?: boolean
   showHeartRate?: boolean
@@ -1158,7 +1239,7 @@ export type ActivitySelectScalar = {
   createdAt?: boolean
 }
 
-export type ActivityOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "name" | "description" | "type" | "date" | "distance" | "duration" | "elevationGain" | "avgSpeed" | "maxSpeed" | "avgHeartRate" | "maxHeartRate" | "calories" | "polyline" | "gpxData" | "isPublic" | "showMap" | "showHeartRate" | "showSpeed" | "showCalories" | "createdAt", ExtArgs["result"]["activity"]>
+export type ActivityOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "name" | "description" | "type" | "date" | "distance" | "duration" | "elevationGain" | "avgSpeed" | "maxSpeed" | "avgHeartRate" | "maxHeartRate" | "calories" | "polyline" | "gpxData" | "splitsData" | "chartData" | "bestEffortsData" | "isPublic" | "showMap" | "showHeartRate" | "showSpeed" | "showCalories" | "createdAt", ExtArgs["result"]["activity"]>
 export type ActivityInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
@@ -1191,6 +1272,9 @@ export type $ActivityPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     calories: number | null
     polyline: string | null
     gpxData: string | null
+    splitsData: runtime.JsonValue | null
+    chartData: runtime.JsonValue | null
+    bestEffortsData: runtime.JsonValue | null
     isPublic: boolean
     showMap: boolean
     showHeartRate: boolean
@@ -1637,6 +1721,9 @@ export interface ActivityFieldRefs {
   readonly calories: Prisma.FieldRef<"Activity", 'Int'>
   readonly polyline: Prisma.FieldRef<"Activity", 'String'>
   readonly gpxData: Prisma.FieldRef<"Activity", 'String'>
+  readonly splitsData: Prisma.FieldRef<"Activity", 'Json'>
+  readonly chartData: Prisma.FieldRef<"Activity", 'Json'>
+  readonly bestEffortsData: Prisma.FieldRef<"Activity", 'Json'>
   readonly isPublic: Prisma.FieldRef<"Activity", 'Boolean'>
   readonly showMap: Prisma.FieldRef<"Activity", 'Boolean'>
   readonly showHeartRate: Prisma.FieldRef<"Activity", 'Boolean'>

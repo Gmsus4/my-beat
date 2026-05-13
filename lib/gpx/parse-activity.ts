@@ -31,7 +31,28 @@ export type BestEffort = {
   duration: number;
 };
 
+export type ActivityChartPoint = {
+  distance: number;
+  elevation: number | null;
+  heartRate: number | null;
+  pace: number | null;
+};
+
 const maxStoredPoints = 1200;
+const maxChartPoints = 700;
+
+export const bestEffortTargetDistances = [
+  400,
+  804.672,
+  1000,
+  1609.344,
+  3218.688,
+  5000,
+  10000,
+  15000,
+  21097.5,
+  42195,
+];
 
 export async function parseGpxActivity(xml: string): Promise<ParsedActivity> {
   if (!("canParse" in URL)) {
@@ -277,6 +298,51 @@ export async function parseGpxBestEfforts(
     .filter((effort): effort is BestEffort => effort !== null);
 }
 
+export async function parseGpxChartSeries(
+  xml: string,
+): Promise<ActivityChartPoint[]> {
+  const parser = await parseGpx(xml);
+  const track = parser.tracks[0] ?? parser.routes[0];
+
+  if (!track || track.points.length < 2) {
+    return [];
+  }
+
+  const points = track.points as GpxPoint[];
+  const document = parser.xmlSource as unknown as Document;
+  const trackPointMetrics = getTrackPointMetrics(document);
+  const cumulativeDistances = getCumulativeDistances(
+    points,
+    Array.isArray(track.distance.cumul)
+      ? (track.distance.cumul as unknown as number[])
+      : [],
+  );
+  const paceValues = getMovingPaces(points, cumulativeDistances);
+  const step = Math.max(1, Math.ceil(points.length / maxChartPoints));
+
+  return points
+    .map((point, index) => {
+      const metrics = trackPointMetrics[index];
+      const elevation =
+        typeof point.ele === "number" && Number.isFinite(point.ele)
+          ? Math.round(point.ele * 10) / 10
+          : null;
+
+      return {
+        distance: roundDistance(cumulativeDistances[index] ?? 0),
+        elevation,
+        heartRate: metrics?.heartRate ?? null,
+        pace: paceValues[index] ?? null,
+      };
+    })
+    .filter(
+      (_, index) =>
+        index % step === 0 ||
+        index === points.length - 1 ||
+        index === points.length - 2,
+    );
+}
+
 function getBestDurationForDistance(
   points: GpxPoint[],
   cumulativeDistances: number[],
@@ -365,6 +431,69 @@ function findFirstDistanceIndex(
   return result;
 }
 
+function getCumulativeDistances(points: GpxPoint[], existing: number[]) {
+  if (
+    existing.length === points.length &&
+    existing.every((distance) => Number.isFinite(distance))
+  ) {
+    return existing;
+  }
+
+  const distances: number[] = [0];
+
+  for (let index = 1; index < points.length; index += 1) {
+    distances[index] =
+      distances[index - 1] + distanceBetween(points[index - 1], points[index]);
+  }
+
+  return distances;
+}
+
+function getMovingPaces(points: GpxPoint[], cumulativeDistances: number[]) {
+  const paces: (number | null)[] = Array(points.length).fill(null);
+  const windowDistance = 120;
+
+  for (let index = 1; index < points.length; index += 1) {
+    const current = points[index];
+
+    if (!current.time) {
+      continue;
+    }
+
+    let startIndex = index - 1;
+
+    while (
+      startIndex > 0 &&
+      cumulativeDistances[index] - cumulativeDistances[startIndex] <
+        windowDistance
+    ) {
+      startIndex -= 1;
+    }
+
+    const startPoint = points[startIndex];
+
+    if (!startPoint.time) {
+      continue;
+    }
+
+    const distance = cumulativeDistances[index] - cumulativeDistances[startIndex];
+    const duration =
+      (current.time.getTime() - startPoint.time.getTime()) / 1000;
+
+    if (distance < 20 || duration <= 0) {
+      continue;
+    }
+
+    const pace = duration / (distance / 1000);
+
+    if (Number.isFinite(pace) && pace > 0) {
+      paces[index] = Math.round(pace);
+    }
+  }
+
+  return paces;
+}
+
 function distanceBetween(from: GpxPoint, to: GpxPoint) {
   const radius = 6371e3;
   const radians = Math.PI / 180;
@@ -419,6 +548,26 @@ function getHeartRates(document: Document) {
   return heartRates;
 }
 
+function getTrackPointMetrics(document: Document) {
+  const points = Array.from(document.getElementsByTagName("*")).filter(
+    (element) => element.localName.toLowerCase() === "trkpt",
+  );
+
+  return points.map((point) => {
+    const children = Array.from(point.getElementsByTagName("*"));
+    const heartRateElement = children.find(
+      (element) => element.localName.toLowerCase() === "hr",
+    );
+    const heartRate = Number(heartRateElement?.textContent);
+
+    return {
+      heartRate:
+        Number.isFinite(heartRate) && heartRate > 0
+          ? Math.round(heartRate)
+          : null,
+    };
+  });
+}
 
 function samplePoints(points: GpxPoint[]) {
   const step = Math.max(1, Math.ceil(points.length / maxStoredPoints));
@@ -433,4 +582,8 @@ function samplePoints(points: GpxPoint[]) {
 
 function roundCoordinate(value: number) {
   return Math.round(value * 100000) / 100000;
+}
+
+function roundDistance(value: number) {
+  return Math.round((value / 1000) * 100) / 100;
 }

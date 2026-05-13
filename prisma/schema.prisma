@@ -15,6 +15,16 @@ model User {
   avatar     String?
   cover      String?
   bio        String?
+  socialPlatform1 String?
+  socialUrl1      String?
+  socialPlatform2 String?
+  socialUrl2      String?
+  socialPlatform3 String?
+  socialUrl3      String?
+  healthPlatform String?
+  healthUrl      String?
+  musicPlatform  String?
+  musicUrl       String?
   createdAt  DateTime   @default(now())
   activities Activity[]
   following  Follow[]   @relation("Follower")
@@ -39,6 +49,9 @@ model Activity {
   calories      Int?
   polyline      String?
   gpxData       String?
+  splitsData    Json?
+  chartData     Json?
+  bestEffortsData Json?
   isPublic      Boolean  @default(true)
   showMap       Boolean  @default(true)
   showHeartRate Boolean  @default(true)

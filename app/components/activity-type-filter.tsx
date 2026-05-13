@@ -25,7 +25,7 @@ export function ActivityTypeFilter({
   }
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-1.5">
       <FilterLink
         href={buildHref(basePath, { range: activeRange, type: null })}
         active={!activeType}
@@ -59,8 +59,8 @@ function FilterLink({
       href={href}
       className={
         active
-          ? "inline-flex h-10 items-center justify-center rounded-md bg-orange-500 px-3 text-sm font-semibold text-black"
-          : "inline-flex h-10 items-center justify-center rounded-md border border-zinc-800 px-3 text-sm font-semibold text-zinc-300 transition hover:border-zinc-600"
+          ? "inline-flex h-7 items-center justify-center rounded-md bg-orange-500 px-2 text-[11px] font-semibold text-black"
+          : "inline-flex h-7 items-center justify-center rounded-md border border-zinc-800 px-2 text-[11px] font-semibold text-zinc-300 transition hover:border-zinc-600"
       }
     >
       {children}

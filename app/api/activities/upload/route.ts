@@ -2,7 +2,13 @@ import { getServerSession } from "next-auth/next";
 import { NextResponse } from "next/server";
 
 import { authOptions } from "@/lib/auth";
-import { parseGpxActivity } from "@/lib/gpx/parse-activity";
+import {
+  bestEffortTargetDistances,
+  parseGpxActivity,
+  parseGpxBestEfforts,
+  parseGpxChartSeries,
+  parseGpxKilometerSplits,
+} from "@/lib/gpx/parse-activity";
 import { prisma } from "@/lib/prisma";
 
 const maxFileSize = 8 * 1024 * 1024;
@@ -56,7 +62,12 @@ export async function POST(request: Request) {
       );
     }
 
-    const parsed = await parseGpxActivity(gpxData);
+    const [parsed, splitsData, chartData, bestEffortsData] = await Promise.all([
+      parseGpxActivity(gpxData),
+      parseGpxKilometerSplits(gpxData),
+      parseGpxChartSeries(gpxData),
+      parseGpxBestEfforts(gpxData, bestEffortTargetDistances),
+    ]);
 
     await prisma.activity.create({
       data: {
@@ -73,6 +84,9 @@ export async function POST(request: Request) {
         maxHeartRate: parsed.maxHeartRate,
         polyline: parsed.polyline,
         gpxData,
+        splitsData,
+        chartData,
+        bestEffortsData,
       },
     });
 

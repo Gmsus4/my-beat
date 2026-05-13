@@ -22,6 +22,16 @@ export default async function ProfileSettingsPage() {
       bio: true,
       avatar: true,
       cover: true,
+      socialPlatform1: true,
+      socialUrl1: true,
+      socialPlatform2: true,
+      socialUrl2: true,
+      socialPlatform3: true,
+      socialUrl3: true,
+      healthPlatform: true,
+      healthUrl: true,
+      musicPlatform: true,
+      musicUrl: true,
     },
   });
 

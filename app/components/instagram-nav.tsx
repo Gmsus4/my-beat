@@ -28,10 +28,24 @@ export function InstagramNav({ user }: InstagramNavProps) {
 
   return (
     <>
-      <aside className="hidden border-r border-zinc-900 bg-black px-3 py-6 lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col">
-        <Link href={user ? "/dashboard" : "/"} className="mb-8 px-3">
-          <span className="text-2xl font-semibold tracking-normal uppercase" >
-            Mybeat
+      <aside className="group fixed inset-y-0 left-0 z-50 hidden w-[76px] border-r border-zinc-900 bg-black px-3 py-6 transition-[width] duration-200 ease-out hover:w-[244px] lg:flex lg:flex-col">
+        <Link
+          href={user ? "/dashboard" : "/"}
+          className="mb-8 flex h-10 items-center gap-3 overflow-hidden px-3"
+          aria-label="Mybeat"
+        >
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-md">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/android-chrome-192x192.png"
+              alt="Mybeat"
+              width={32}
+              height={32}
+              className="h-8 w-8 max-w-none shrink-0 object-contain"
+            />
+          </span>
+          <span className="whitespace-nowrap text-2xl font-semibold uppercase tracking-normal opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+            mybeat
           </span>
         </Link>
 
@@ -51,10 +65,12 @@ export function InstagramNav({ user }: InstagramNavProps) {
           <div className="mt-6 flex flex-col gap-2">
             <Link
               href={publicProfileHref}
-              className="flex items-center gap-3 rounded-lg px-3 py-3 transition hover:bg-zinc-900"
+              className="flex items-center gap-3 overflow-hidden rounded-lg px-3 py-3 transition hover:bg-zinc-900"
             >
-              <Avatar user={user} />
-              <div className="min-w-0">
+              <span className="flex w-6 shrink-0 items-center justify-center">
+                <Avatar user={user} />
+              </span>
+              <div className="min-w-0 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
                 <p className="truncate text-sm font-semibold">{user.name}</p>
                 <p className="truncate text-xs text-zinc-500">
                   @{user.username}
@@ -64,10 +80,14 @@ export function InstagramNav({ user }: InstagramNavProps) {
             <button
               type="button"
               onClick={() => signOut({ callbackUrl: "/" })}
-              className="flex items-center gap-3 rounded-lg px-3 py-3 text-left text-sm font-semibold text-zinc-300 transition hover:bg-zinc-900 hover:text-red-200"
+              className="flex items-center gap-3 overflow-hidden rounded-lg px-3 py-3 text-left text-sm font-semibold text-zinc-300 transition hover:bg-zinc-900 hover:text-red-200"
             >
-              <LogoutIcon />
-              <span>Cerrar sesion</span>
+              <span className="flex w-6 shrink-0 items-center justify-center">
+                <LogoutIcon />
+              </span>
+              <span className="whitespace-nowrap opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+                Cerrar sesion
+              </span>
             </button>
           </div>
         ) : null}
@@ -104,12 +124,16 @@ function NavLink({
       href={href}
       className={
         active
-          ? "flex items-center gap-4 rounded-lg bg-zinc-900 px-3 py-3 text-base font-semibold text-white"
-          : "flex items-center gap-4 rounded-lg px-3 py-3 text-base font-medium text-zinc-200 transition hover:bg-zinc-900 hover:text-white"
+          ? "flex items-center gap-4 overflow-hidden rounded-lg bg-zinc-900 px-3 py-3 text-base font-semibold text-white"
+          : "flex items-center gap-4 overflow-hidden rounded-lg px-3 py-3 text-base font-medium text-zinc-200 transition hover:bg-zinc-900 hover:text-white"
       }
     >
-      <Icon />
-      <span>{label}</span>
+      <span className="flex w-6 shrink-0 items-center justify-center">
+        <Icon />
+      </span>
+      <span className="whitespace-nowrap opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+        {label}
+      </span>
     </Link>
   );
 }

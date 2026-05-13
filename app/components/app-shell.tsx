@@ -18,7 +18,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
     : null;
 
   return (
-    <div className="min-h-screen bg-black text-white lg:grid lg:grid-cols-[244px_1fr]">
+    <div className="min-h-screen bg-black text-white lg:pl-[76px]">
       <InstagramNav user={user} />
       <div className="min-w-0 pb-20 lg:pb-0">{children}</div>
     </div>

@@ -1,9 +1,18 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { after } from "next/server";
 
+import { ActivityCharts } from "@/app/components/activity-charts";
 import { RouteCanvas } from "@/app/dashboard/activity/[id]/route-canvas";
-import { parseGpxKilometerSplits } from "@/lib/gpx/parse-activity";
+import {
+  parseGpxChartSeries,
+  parseGpxKilometerSplits,
+} from "@/lib/gpx/parse-activity";
+import {
+  readStoredChartPoints,
+  readStoredSplits,
+} from "@/lib/gpx/stored-activity-data";
 import { prisma } from "@/lib/prisma";
 
 type PageProps = {
@@ -117,6 +126,8 @@ export default async function PublicActivityPage({ params }: PageProps) {
       calories: true,
       polyline: true,
       gpxData: true,
+      splitsData: true,
+      chartData: true,
       showMap: true,
       showHeartRate: true,
       showSpeed: true,
@@ -135,14 +146,40 @@ export default async function PublicActivityPage({ params }: PageProps) {
   }
 
   const points = parsePolyline(activity.polyline);
+  const storedSplits = readStoredSplits(activity.splitsData);
+  const storedChartPoints = readStoredChartPoints(activity.chartData);
   const splits =
-    activity.gpxData && activity.showSpeed
-      ? await parseGpxKilometerSplits(activity.gpxData)
-      : [];
+    activity.showSpeed && storedSplits.length > 0
+      ? storedSplits
+      : activity.gpxData && activity.showSpeed
+        ? await parseGpxKilometerSplits(activity.gpxData)
+        : [];
+  const chartPoints =
+    storedChartPoints.length > 0
+      ? storedChartPoints
+      : activity.gpxData
+        ? await parseGpxChartSeries(activity.gpxData)
+        : [];
+
+  if (
+    activity.gpxData &&
+    (storedSplits.length === 0 || storedChartPoints.length === 0) &&
+    (splits.length > 0 || chartPoints.length > 0)
+  ) {
+    after(async () => {
+      await prisma.activity.update({
+        where: { id },
+        data: {
+          ...(storedSplits.length === 0 ? { splitsData: splits } : {}),
+          ...(storedChartPoints.length === 0 ? { chartData: chartPoints } : {}),
+        },
+      });
+    });
+  }
 
   return (
     <main className="min-h-screen bg-black px-6 py-10 text-white">
-      <section className="mx-auto flex w-full max-w-6xl flex-col gap-8">
+      <section className="mx-auto flex w-full max-w-7xl flex-col gap-8">
         <div>
           <Link
             href={`/${activity.user.username}`}
@@ -169,108 +206,162 @@ export default async function PublicActivityPage({ params }: PageProps) {
           </div>
         </div>
 
-        {activity.showMap ? <RouteCanvas points={points} /> : null}
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(260px,300px)] lg:items-start">
+          <div className="min-w-0">
+            {activity.showMap ? <RouteCanvas points={points} /> : null}
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Metric label="Distancia" value={formatDistance(activity.distance)} />
-          {activity.showSpeed ? (
-            <>
-              <Metric
-                label="Ritmo"
-                value={formatPace(activity.distance, activity.duration)}
-              />
-              <Metric
-                label="Vel. promedio"
-                value={formatSpeed(activity.avgSpeed)}
-              />
-              <Metric
-                label="Vel. maxima"
-                value={formatSpeed(activity.maxSpeed)}
-              />
-            </>
-          ) : null}
-          <Metric label="Duracion" value={formatDuration(activity.duration)} />
-          <Metric
-            label="Elevacion"
-            value={formatElevation(activity.elevationGain)}
-          />
-          {activity.showHeartRate ? (
-            <>
-              <Metric
-                label="FC promedio"
-                value={formatHeartRate(activity.avgHeartRate)}
-              />
-              <Metric
-                label="FC maxima"
-                value={formatHeartRate(activity.maxHeartRate)}
-              />
-            </>
-          ) : null}
-          {activity.showCalories ? (
-            <Metric label="Calorias" value={formatCalories(activity.calories)} />
-          ) : null}
-        </div>
+            <ActivityCharts
+              points={chartPoints}
+              showHeartRate={activity.showHeartRate}
+              showSpeed={activity.showSpeed}
+            />
 
-        {activity.showSpeed ? (
-          <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-5">
-            <h2 className="text-lg font-semibold">Ritmos por kilometro</h2>
-            <p className="mt-1 text-sm text-zinc-500">
-              Calculados con tiempo en movimiento para acercarse a plataformas
-              como Strava.
-            </p>
-            {splits.length > 0 ? (
-              <div className="mt-4 overflow-x-auto">
-                <table className="w-full min-w-[520px] text-left text-sm">
-                  <thead className="border-b border-zinc-800 text-zinc-500">
-                    <tr>
-                      <th className="py-3 font-medium">Split</th>
-                      <th className="py-3 font-medium">Distancia</th>
-                      <th className="py-3 font-medium">Ritmo</th>
-                      <th className="py-3 font-medium">Tiempo</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {splits.map((split) => (
-                      <tr
-                        key={`${split.kilometer}-${split.distance}`}
-                        className="border-b border-zinc-900 last:border-0"
-                      >
-                        <td className="py-3 font-semibold text-white">
-                          {split.distance >= 1000
-                            ? `Km ${split.kilometer}`
-                            : "Final"}
-                        </td>
-                        <td className="py-3 text-zinc-300">
-                          {formatDistance(split.distance)}
-                        </td>
-                        <td className="py-3 text-orange-500">
-                          {formatPace(split.distance, split.duration)}
-                        </td>
-                        <td className="py-3 text-zinc-300">
-                          {formatDuration(split.duration)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            {activity.showSpeed ? (
+              <div className="mt-6 overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950">
+                <div className="border-b border-zinc-800 bg-black px-4 py-4">
+                  <h2 className="text-lg font-semibold">
+                    Ritmos por kilometro
+                  </h2>
+                  <p className="mt-1 text-sm text-zinc-500">
+                    Calculados con tiempo en movimiento para acercarse a
+                    plataformas como Strava.
+                  </p>
+                </div>
+                {splits.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[520px] text-left text-sm">
+                      <thead className="border-b border-zinc-800 text-zinc-500">
+                        <tr>
+                          <th className="px-4 py-3 font-medium">Split</th>
+                          <th className="px-4 py-3 font-medium">Distancia</th>
+                          <th className="px-4 py-3 font-medium">Ritmo</th>
+                          <th className="px-4 py-3 font-medium">Tiempo</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {splits.map((split) => (
+                          <tr
+                            key={`${split.kilometer}-${split.distance}`}
+                            className="border-b border-zinc-900 last:border-0 odd:bg-zinc-900/45 even:bg-black/30"
+                          >
+                            <td className="px-4 py-3 font-semibold text-white">
+                              {split.distance >= 1000
+                                ? `Km ${split.kilometer}`
+                                : "Final"}
+                            </td>
+                            <td className="px-4 py-3 text-zinc-300">
+                              {formatDistance(split.distance)}
+                            </td>
+                            <td className="px-4 py-3 text-orange-500">
+                              {formatPace(split.distance, split.duration)}
+                            </td>
+                            <td className="px-4 py-3 text-zinc-300">
+                              {formatDuration(split.duration)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="px-4 py-4 text-sm text-zinc-500">
+                    No hay datos suficientes para calcular ritmos por kilometro.
+                  </p>
+                )}
               </div>
-            ) : (
-              <p className="mt-3 text-sm text-zinc-500">
-                No hay datos suficientes para calcular ritmos por kilometro.
-              </p>
-            )}
+            ) : null}
           </div>
-        ) : null}
+
+          <aside className="lg:sticky lg:top-6">
+            <section className="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950">
+              <div className="border-b border-zinc-800 bg-black px-3 py-3">
+                <h2 className="text-lg font-semibold">Datos de actividad</h2>
+              </div>
+              <StatsTableSection title="Resumen">
+                <StatsTableRow
+                  label="Distancia"
+                  value={formatDistance(activity.distance)}
+                />
+                {activity.showSpeed ? (
+                  <StatsTableRow
+                    label="Ritmo"
+                    value={formatPace(activity.distance, activity.duration)}
+                  />
+                ) : null}
+                <StatsTableRow
+                  label="Duracion"
+                  value={formatDuration(activity.duration)}
+                />
+                <StatsTableRow
+                  label="Elevacion"
+                  value={formatElevation(activity.elevationGain)}
+                />
+              </StatsTableSection>
+
+              {activity.showSpeed ? (
+                <StatsTableSection title="Velocidad">
+                  <StatsTableRow
+                    label="Promedio"
+                    value={formatSpeed(activity.avgSpeed)}
+                  />
+                  <StatsTableRow
+                    label="Maxima"
+                    value={formatSpeed(activity.maxSpeed)}
+                  />
+                </StatsTableSection>
+              ) : null}
+
+              {activity.showHeartRate ? (
+                <StatsTableSection title="Frecuencia cardiaca">
+                  <StatsTableRow
+                    label="Promedio"
+                    value={formatHeartRate(activity.avgHeartRate)}
+                  />
+                  <StatsTableRow
+                    label="Maxima"
+                    value={formatHeartRate(activity.maxHeartRate)}
+                  />
+                </StatsTableSection>
+              ) : null}
+
+              {activity.showCalories ? (
+                <StatsTableSection title="Energia">
+                  <StatsTableRow
+                    label="Calorias"
+                    value={formatCalories(activity.calories)}
+                  />
+                </StatsTableSection>
+              ) : null}
+            </section>
+          </aside>
+        </div>
       </section>
     </main>
   );
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+function StatsTableSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-5">
-      <p className="text-sm text-zinc-500">{label}</p>
-      <p className="mt-2 text-2xl font-semibold text-white">{value}</p>
+    <div className="border-b border-zinc-800 pb-2 last:border-b-0 last:pb-0 [&+&]:pt-2">
+      <div className="bg-black px-3 py-2.5 text-sm font-semibold text-white">
+        {title}
+      </div>
+      <div className="divide-y divide-zinc-800">{children}</div>
+    </div>
+  );
+}
+
+function StatsTableRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="grid grid-cols-[1fr_auto] gap-3 px-3 py-2 text-xs odd:bg-zinc-900/45 even:bg-black/30">
+      <span className="font-medium text-zinc-200">{label}</span>
+      <span className="font-semibold text-white">{value}</span>
     </div>
   );
 }
