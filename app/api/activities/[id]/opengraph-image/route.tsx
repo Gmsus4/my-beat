@@ -2,9 +2,8 @@ import { ImageResponse } from "next/og";
 
 import { prisma } from "@/lib/prisma";
 
-type ImageProps = {
+type RouteContext = {
   params: Promise<{
-    username: string;
     id: string;
   }>;
 };
@@ -16,20 +15,17 @@ type RoutePoint = {
 
 export const runtime = "nodejs";
 
-export const size = {
+const size = {
   width: 1200,
   height: 630,
 };
 
-export const contentType = "image/png";
-
-export default async function Image({ params }: ImageProps) {
-  const { username, id } = await params;
+export async function GET(_request: Request, { params }: RouteContext) {
+  const { id } = await params;
   const activity = await prisma.activity.findFirst({
     where: {
       id,
       isPublic: true,
-      user: { username },
     },
     select: {
       name: true,
@@ -39,7 +35,6 @@ export default async function Image({ params }: ImageProps) {
       polyline: true,
       user: {
         select: {
-          name: true,
           username: true,
         },
       },
@@ -147,7 +142,10 @@ export default async function Image({ params }: ImageProps) {
           </div>
 
           <Metric label="Distancia" value={formatDistance(activity.distance)} />
-          <Metric label="Ritmo" value={formatPace(activity.distance, activity.duration)} />
+          <Metric
+            label="Ritmo"
+            value={formatPace(activity.distance, activity.duration)}
+          />
           <Metric label="Duracion" value={formatDuration(activity.duration)} />
         </div>
 

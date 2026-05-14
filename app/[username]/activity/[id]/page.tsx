@@ -74,7 +74,7 @@ export async function generateMetadata({
     .join(" - ");
   const url = `/${activity.user.username}/activity/${id}`;
   const absoluteUrl = getAbsoluteUrl(url);
-  const imageUrl = getAbsoluteUrl(`${url}/opengraph-image`);
+  const imageUrl = getAbsoluteUrl(`/api/activities/${id}/opengraph-image`);
 
   return {
     title,
