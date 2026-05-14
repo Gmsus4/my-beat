@@ -435,7 +435,16 @@ function getAbsoluteUrl(path: string) {
 }
 
 function getSquareProfileImages(url: string | null) {
-  return url ? [{ url, width: 1200, height: 1200, alt: "Foto de perfil" }] : [];
+  return url
+    ? [
+        {
+          url: getAbsoluteUrl(url),
+          width: 1200,
+          height: 1200,
+          alt: "Foto de perfil",
+        },
+      ]
+    : [];
 }
 
 function getShareMetrics({

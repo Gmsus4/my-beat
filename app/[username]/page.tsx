@@ -524,7 +524,22 @@ export default async function PublicProfilePage({
 }
 
 function getSquareProfileImages(url: string | null) {
-  return url ? [{ url, width: 1200, height: 1200, alt: "Foto de perfil" }] : [];
+  return url
+    ? [
+        {
+          url: getAbsoluteUrl(url),
+          width: 1200,
+          height: 1200,
+          alt: "Foto de perfil",
+        },
+      ]
+    : [];
+}
+
+function getAbsoluteUrl(path: string) {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+
+  return new URL(path, baseUrl).toString();
 }
 
 function ProfileStat({
