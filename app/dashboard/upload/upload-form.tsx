@@ -13,6 +13,11 @@ type UploadProgress = {
   failed: number;
 };
 
+type UploadFailure = {
+  fileName: string;
+  reason: string;
+};
+
 const maxFileSize = 8 * 1024 * 1024;
 
 const uploadSteps = [
@@ -27,6 +32,7 @@ export function UploadForm() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [failedUploads, setFailedUploads] = useState<UploadFailure[]>([]);
   const [phase, setPhase] = useState<UploadPhase>("idle");
   const [uploadStepIndex, setUploadStepIndex] = useState(0);
   const [progress, setProgress] = useState<UploadProgress | null>(null);
@@ -52,6 +58,7 @@ export function UploadForm() {
     event.preventDefault();
     setError(null);
     setSuccessMessage(null);
+    setFailedUploads([]);
     setUploadStepIndex(0);
     setPhase("reading");
 
@@ -66,28 +73,10 @@ export function UploadForm() {
       return;
     }
 
-    const invalidExtension = files.find(
-      (file) => !file.name.toLowerCase().endsWith(".gpx"),
-    );
-
-    if (invalidExtension) {
-      setError(`"${invalidExtension.name}" debe tener extension .gpx.`);
-      setPhase("idle");
-      return;
-    }
-
-    const oversizedFile = files.find((file) => file.size > maxFileSize);
-
-    if (oversizedFile) {
-      setError(`"${oversizedFile.name}" debe pesar menos de 8 MB.`);
-      setPhase("idle");
-      return;
-    }
-
     let shouldReset = true;
     let successCount = 0;
     let failedCount = 0;
-    const failures: string[] = [];
+    const failures: UploadFailure[] = [];
 
     try {
       for (const [index, file] of files.entries()) {
@@ -98,32 +87,78 @@ export function UploadForm() {
           success: successCount,
           failed: failedCount,
         });
-        setPhase("reading");
 
-        const gpxData = await readBrowserFile(file);
-
-        setUploadStepIndex(0);
-        setPhase("uploading");
-
-        const response = await fetch("/api/activities/upload", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            fileName: file.name,
-            gpxData,
-          }),
-        });
-        const payload = (await response.json()) as { error?: string };
-
-        if (!response.ok) {
+        if (!file.name.toLowerCase().endsWith(".gpx")) {
           failedCount += 1;
-          failures.push(
-            `${file.name}: ${payload.error ?? "No se pudo subir."}`,
-          );
-        } else {
-          successCount += 1;
+          failures.push({
+            fileName: file.name,
+            reason: "El archivo debe tener extension .gpx.",
+          });
+          setProgress({
+            current: index + 1,
+            total: files.length,
+            fileName: file.name,
+            success: successCount,
+            failed: failedCount,
+          });
+          continue;
+        }
+
+        if (file.size > maxFileSize) {
+          failedCount += 1;
+          failures.push({
+            fileName: file.name,
+            reason: "El archivo GPX debe pesar menos de 8 MB.",
+          });
+          setProgress({
+            current: index + 1,
+            total: files.length,
+            fileName: file.name,
+            success: successCount,
+            failed: failedCount,
+          });
+          continue;
+        }
+
+        try {
+          setPhase("reading");
+          const gpxData = await readBrowserFile(file);
+
+          setUploadStepIndex(0);
+          setPhase("uploading");
+
+          const response = await fetch("/api/activities/upload", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              fileName: file.name,
+              gpxData,
+            }),
+          });
+          const payload = (await response.json().catch(() => ({}))) as {
+            error?: string;
+          };
+
+          if (!response.ok) {
+            failedCount += 1;
+            failures.push({
+              fileName: file.name,
+              reason: payload.error ?? "No se pudo subir.",
+            });
+          } else {
+            successCount += 1;
+          }
+        } catch (uploadError) {
+          failedCount += 1;
+          failures.push({
+            fileName: file.name,
+            reason:
+              uploadError instanceof Error
+                ? uploadError.message
+                : "No se pudo leer o enviar el archivo.",
+          });
         }
 
         setProgress({
@@ -139,15 +174,17 @@ export function UploadForm() {
 
       if (failedCount > 0) {
         setError(
-          `${failedCount} de ${files.length} archivos no se pudieron subir. ${failures
-            .slice(0, 3)
-            .join(" ")}`,
+          `${failedCount} de ${files.length} archivos no se pudieron subir.`,
         );
+        setFailedUploads(failures);
         setSuccessMessage(
           successCount > 0
             ? `${successCount} actividades se guardaron correctamente.`
             : null,
         );
+        if (successCount > 0) {
+          event.currentTarget.reset();
+        }
         return;
       }
 
@@ -207,9 +244,19 @@ export function UploadForm() {
       ) : null}
 
       {error ? (
-        <p className="rounded-md border border-red-900/70 bg-red-950/50 px-4 py-3 text-sm text-red-200">
-          {error}
-        </p>
+        <div className="rounded-md border border-red-900/70 bg-red-950/50 px-4 py-3 text-sm text-red-200">
+          <p>{error}</p>
+          {failedUploads.length > 0 ? (
+            <ul className="mt-3 max-h-56 space-y-2 overflow-auto pr-1 text-xs text-red-100/90">
+              {failedUploads.map((failure) => (
+                <li key={`${failure.fileName}-${failure.reason}`}>
+                  <span className="font-semibold">{failure.fileName}</span>:{" "}
+                  {failure.reason}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
       ) : null}
 
       {successMessage ? (
