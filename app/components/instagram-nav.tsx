@@ -31,17 +31,17 @@ export function InstagramNav({ user }: InstagramNavProps) {
       <aside className="group fixed inset-y-0 left-0 z-50 hidden w-[76px] border-r border-zinc-900 bg-black px-3 py-6 transition-[width] duration-200 ease-out hover:w-[244px] lg:flex lg:flex-col">
         <Link
           href={user ? "/dashboard" : "/"}
-          className="mb-8 flex h-10 items-center gap-3 overflow-hidden px-3"
+          className="mb-8 flex h-10 items-center gap-3 overflow-hidden px-2"
           aria-label="Mybeat"
         >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-md">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md p-0.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/android-chrome-192x192.png"
+              src="/logo-nav.png"
               alt="Mybeat"
-              width={32}
-              height={32}
-              className="h-8 w-8 max-w-none shrink-0 object-contain"
+              width={30}
+              height={30}
+              className="block h-[36px] w-[36px] max-w-none shrink-0 object-contain object-center"
             />
           </span>
           <span className="whitespace-nowrap text-2xl font-semibold uppercase tracking-normal opacity-0 transition-opacity duration-150 group-hover:opacity-100">
