@@ -46,7 +46,6 @@ export async function generateMetadata({
           username: true,
           name: true,
           avatar: true,
-          cover: true,
         },
       },
     },
@@ -74,7 +73,7 @@ export async function generateMetadata({
     .join(" - ");
   const url = `/${activity.user.username}/activity/${id}`;
   const absoluteUrl = getAbsoluteUrl(url);
-  const imageUrl = getAbsoluteUrl(`/api/activities/${id}/opengraph-image`);
+  const images = getSquareProfileImages(activity.user.avatar);
 
   return {
     title,
@@ -89,13 +88,13 @@ export async function generateMetadata({
       url: absoluteUrl,
       publishedTime: activity.date.toISOString(),
       authors: [activity.user.name],
-      images: [{ url: imageUrl, width: 1200, height: 630, alt: title }],
+      images,
     },
     twitter: {
-      card: "summary_large_image",
+      card: "summary",
       title,
       description,
-      images: [imageUrl],
+      images: images.map((image) => image.url),
     },
   };
 }
@@ -433,6 +432,10 @@ function getAbsoluteUrl(path: string) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
   return new URL(path, baseUrl).toString();
+}
+
+function getSquareProfileImages(url: string | null) {
+  return url ? [{ url, width: 1200, height: 1200, alt: "Foto de perfil" }] : [];
 }
 
 function getShareMetrics({

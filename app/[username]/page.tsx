@@ -66,7 +66,6 @@ export async function generateMetadata({
       name: true,
       bio: true,
       avatar: true,
-      cover: true,
       socialPlatform1: true,
       socialUrl1: true,
       socialPlatform2: true,
@@ -96,7 +95,7 @@ export async function generateMetadata({
   const description =
     user.bio ||
     `${user._count.activities} actividades publicas en Mybeat. ${user._count.followers} seguidores.`;
-  const images = getMetadataImages(user.cover, user.avatar);
+  const images = getSquareProfileImages(user.avatar);
 
   return {
     title,
@@ -112,7 +111,7 @@ export async function generateMetadata({
       images,
     },
     twitter: {
-      card: images.length > 0 ? "summary_large_image" : "summary",
+      card: images.length > 0 ? "summary" : "summary",
       title,
       description,
       images,
@@ -524,10 +523,8 @@ export default async function PublicProfilePage({
   );
 }
 
-function getMetadataImages(...urls: (string | null)[]) {
-  return urls
-    .filter((url): url is string => Boolean(url))
-    .map((url) => ({ url }));
+function getSquareProfileImages(url: string | null) {
+  return url ? [{ url, width: 1200, height: 1200, alt: "Foto de perfil" }] : [];
 }
 
 function ProfileStat({
