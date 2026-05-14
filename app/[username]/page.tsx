@@ -39,6 +39,7 @@ type PageProps = {
   searchParams: Promise<{
     range?: string | string[];
     type?: string | string[];
+    page?: string | string[];
   }>;
 };
 
@@ -48,6 +49,7 @@ type RoutePoint = {
 };
 
 const reservedRoutes = new Set(["api", "dashboard", "onboarding"]);
+const activityPageSize = 30;
 
 export async function generateMetadata({
   params,
@@ -125,10 +127,11 @@ export default async function PublicProfilePage({
   searchParams,
 }: PageProps) {
   const { username } = await params;
-  const { range, type } = await searchParams;
+  const { range, type, page } = await searchParams;
   const activeRange = normalizeActivityDateRange(range);
   const fromDate = getActivityDateFilter(activeRange);
   const activeType = normalizeActivityTypeFilter(type);
+  const activePage = normalizePage(page);
   const session = await getServerSession(authOptions);
 
   if (reservedRoutes.has(username.toLowerCase())) {
@@ -162,31 +165,6 @@ export default async function PublicProfilePage({
             following: true,
           },
         },
-        activities: {
-          where: {
-            isPublic: true,
-            ...(fromDate ? { date: { gte: fromDate } } : {}),
-            ...(activeType ? { type: activeType } : {}),
-          },
-          orderBy: { date: "desc" },
-          select: {
-            id: true,
-            name: true,
-            type: true,
-            date: true,
-            distance: true,
-            duration: true,
-            elevationGain: true,
-            avgHeartRate: true,
-            calories: true,
-            polyline: true,
-            showMap: true,
-            showHeartRate: true,
-            showSpeed: true,
-            showCalories: true,
-            bestEffortsData: true,
-          },
-        },
       },
     }),
     session?.user?.email
@@ -216,18 +194,67 @@ export default async function PublicProfilePage({
     notFound();
   }
 
+  const activityWhere = {
+    userId: user.id,
+    isPublic: true,
+    ...(fromDate ? { date: { gte: fromDate } } : {}),
+    ...(activeType ? { type: activeType } : {}),
+  };
+  const [activityCount, periodStats, medalActivities, activities, lifetimeStats] =
+    await Promise.all([
+      prisma.activity.count({ where: activityWhere }),
+      prisma.activity.aggregate({
+        where: activityWhere,
+        _sum: {
+          distance: true,
+          duration: true,
+          elevationGain: true,
+        },
+      }),
+      prisma.activity.findMany({
+        where: activityWhere,
+        select: {
+          distance: true,
+          duration: true,
+          elevationGain: true,
+          showSpeed: true,
+          bestEffortsData: true,
+        },
+      }),
+      prisma.activity.findMany({
+        where: activityWhere,
+        orderBy: { date: "desc" },
+        skip: (activePage - 1) * activityPageSize,
+        take: activityPageSize,
+        select: {
+          id: true,
+          name: true,
+          type: true,
+          date: true,
+          distance: true,
+          duration: true,
+          elevationGain: true,
+          avgHeartRate: true,
+          calories: true,
+          polyline: true,
+          showMap: true,
+          showHeartRate: true,
+          showSpeed: true,
+          showCalories: true,
+        },
+      }),
+      getLifetimePublicStats(user.id),
+    ]);
   const isCurrentUser = currentUser?.id === user.id;
   const isFollowing =
     currentUser?.following.some((follow) => follow.followingId === user.id) ??
     false;
-  const totalDistance = user.activities.reduce(
-    (sum, activity) => sum + activity.distance,
-    0,
+  const publicStats = getPublicProfileStatsFromAggregate(
+    periodStats,
+    activityCount,
   );
-  const publicStats = getPublicProfileStats(user.activities);
-  const lifetimeStats = await getLifetimePublicStats(user.id);
-  const medals = getPublicMedals(user.activities);
-  const activities = user.activities;
+  const medals = getPublicMedals(medalActivities);
+  const totalPages = Math.max(1, Math.ceil(activityCount / activityPageSize));
 
   return (
     <main className="min-h-screen bg-black text-white">
@@ -317,12 +344,12 @@ export default async function PublicProfilePage({
           <div className="flex flex-wrap items-center gap-x-5 gap-y-3 text-sm text-zinc-400">
             <ProfileStat
               label="Actividades"
-              value={user.activities.length.toString()}
+              value={activityCount.toString()}
               icon="activities"
             />
             <ProfileStat
               label="Distancia"
-              value={formatDistance(totalDistance)}
+              value={formatDistance(publicStats.totalDistance)}
               icon="distance"
             />
             <ProfileStat
@@ -462,6 +489,13 @@ export default async function PublicProfilePage({
                     </Link>
                   );
                 })}
+                <PaginationControls
+                  activePage={activePage}
+                  totalPages={totalPages}
+                  basePath={`/${user.username}`}
+                  range={activeRange}
+                  type={activeType}
+                />
               </div>
             ) : (
               <div className="rounded-lg border border-dashed border-zinc-800 bg-zinc-950/50 p-8">
@@ -489,7 +523,7 @@ export default async function PublicProfilePage({
               >
                 <StatsTableRow
                   label="Actividades"
-                  value={user.activities.length.toString()}
+                  value={activityCount.toString()}
                 />
                 <StatsTableRow
                   label="Distancia"
@@ -916,6 +950,71 @@ function MedalTableRow({
   );
 }
 
+function PaginationControls({
+  activePage,
+  totalPages,
+  basePath,
+  range,
+  type,
+}: {
+  activePage: number;
+  totalPages: number;
+  basePath: string;
+  range: string;
+  type: string | null;
+}) {
+  if (totalPages <= 1) {
+    return null;
+  }
+
+  return (
+    <div className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-3 text-sm sm:col-span-2 xl:col-span-3">
+      <PaginationLink
+        href={buildPageHref(basePath, activePage - 1, range, type)}
+        disabled={activePage <= 1}
+      >
+        Anterior
+      </PaginationLink>
+      <span className="text-zinc-500">
+        Pagina {activePage} de {totalPages}
+      </span>
+      <PaginationLink
+        href={buildPageHref(basePath, activePage + 1, range, type)}
+        disabled={activePage >= totalPages}
+      >
+        Siguiente
+      </PaginationLink>
+    </div>
+  );
+}
+
+function PaginationLink({
+  href,
+  disabled,
+  children,
+}: {
+  href: string;
+  disabled: boolean;
+  children: ReactNode;
+}) {
+  if (disabled) {
+    return (
+      <span className="inline-flex h-9 items-center justify-center rounded-md border border-zinc-800 px-3 font-semibold text-zinc-700">
+        {children}
+      </span>
+    );
+  }
+
+  return (
+    <Link
+      href={href}
+      className="inline-flex h-9 items-center justify-center rounded-md border border-zinc-700 px-3 font-semibold text-zinc-200 transition hover:border-orange-500 hover:text-orange-200"
+    >
+      {children}
+    </Link>
+  );
+}
+
 function ActivityStat({ label, value }: { label: string; value: string }) {
   return (
     <div>
@@ -1013,6 +1112,37 @@ function normalizeActivityTypeFilter(type: string | string[] | undefined) {
   return normalized || null;
 }
 
+function normalizePage(page: string | string[] | undefined) {
+  const value = Number(Array.isArray(page) ? page[0] : page);
+
+  return Number.isInteger(value) && value > 0 ? value : 1;
+}
+
+function buildPageHref(
+  basePath: string,
+  page: number,
+  range: string,
+  type: string | null,
+) {
+  const searchParams = new URLSearchParams();
+
+  if (range) {
+    searchParams.set("range", range);
+  }
+
+  if (type) {
+    searchParams.set("type", type);
+  }
+
+  if (page > 1) {
+    searchParams.set("page", page.toString());
+  }
+
+  const query = searchParams.toString();
+
+  return query ? `${basePath}?${query}` : basePath;
+}
+
 function formatRaceDistance(distance: number) {
   if (distance === 400) {
     return "400 m";
@@ -1045,44 +1175,26 @@ function formatRaceDistance(distance: number) {
   return `${Math.round(distance / 1000)}K`;
 }
 
-function getPublicProfileStats(
-  activities: {
-    name: string;
-    distance: number;
-    duration: number;
-    elevationGain: number | null;
-  }[],
+function getPublicProfileStatsFromAggregate(
+  stats: {
+    _sum: {
+      distance: number | null;
+      duration: number | null;
+      elevationGain: number | null;
+    };
+  },
+  activityCount: number,
 ) {
-  const totalDistance = activities.reduce(
-    (sum, activity) => sum + activity.distance,
-    0,
-  );
-  const totalDuration = activities.reduce(
-    (sum, activity) => sum + activity.duration,
-    0,
-  );
-  const totalElevation = activities.reduce(
-    (sum, activity) => sum + (activity.elevationGain ?? 0),
-    0,
-  );
-  const longestActivity = activities.reduce<
-    { name: string; distance: number } | null
-  >((longest, activity) => {
-    if (!longest || activity.distance > longest.distance) {
-      return { name: activity.name, distance: activity.distance };
-    }
-
-    return longest;
-  }, null);
+  const totalDistance = stats._sum.distance ?? 0;
+  const totalDuration = stats._sum.duration ?? 0;
+  const totalElevation = stats._sum.elevationGain ?? 0;
 
   return {
     totalDistance,
     totalDuration,
     totalElevation,
-    longestActivity,
     marathonEquivalent: totalDistance / 42195,
-    averageDistance:
-      activities.length > 0 ? totalDistance / activities.length : 0,
+    averageDistance: activityCount > 0 ? totalDistance / activityCount : 0,
   };
 }
 

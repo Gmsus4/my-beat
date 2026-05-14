@@ -23,8 +23,11 @@ type DashboardPageProps = {
   searchParams: Promise<{
     range?: string | string[];
     type?: string | string[];
+    page?: string | string[];
   }>;
 };
+
+const activityPageSize = 30;
 
 export default async function DashboardPage({
   searchParams,
@@ -35,33 +38,21 @@ export default async function DashboardPage({
     redirect("/");
   }
 
-  const { range, type } = await searchParams;
+  const { range, type, page } = await searchParams;
   const activeRange = normalizeActivityDateRange(range);
   const fromDate = getActivityDateFilter(activeRange);
   const activeType = normalizeActivityTypeFilter(type);
-  const [user, activityTypes, lifetimeStats] = await Promise.all([
+  const activePage = normalizePage(page);
+  const activityWhere = {
+    user: { email: session.user.email },
+    ...(fromDate ? { date: { gte: fromDate } } : {}),
+    ...(activeType ? { type: activeType } : {}),
+  };
+  const [user, activityTypes, lifetimeStats, activityCount, periodStats, medalActivities, activities] = await Promise.all([
     prisma.user.findUnique({
       where: { email: session.user.email },
       select: {
         username: true,
-        activities: {
-          where: {
-            ...(fromDate ? { date: { gte: fromDate } } : {}),
-            ...(activeType ? { type: activeType } : {}),
-          },
-          orderBy: { date: "desc" },
-          select: {
-            id: true,
-            name: true,
-            type: true,
-            date: true,
-            distance: true,
-            duration: true,
-            elevationGain: true,
-            avgHeartRate: true,
-            bestEffortsData: true,
-          },
-        },
       },
     }),
     prisma.activity.findMany({
@@ -74,14 +65,48 @@ export default async function DashboardPage({
       select: { type: true },
     }),
     getLifetimeDashboardStats(session.user.email),
+    prisma.activity.count({ where: activityWhere }),
+    prisma.activity.aggregate({
+      where: activityWhere,
+      _sum: {
+        distance: true,
+        duration: true,
+        elevationGain: true,
+      },
+    }),
+    prisma.activity.findMany({
+      where: activityWhere,
+      select: {
+        distance: true,
+        duration: true,
+        bestEffortsData: true,
+      },
+    }),
+    prisma.activity.findMany({
+      where: activityWhere,
+      orderBy: { date: "desc" },
+      skip: (activePage - 1) * activityPageSize,
+      take: activityPageSize,
+      select: {
+        id: true,
+        name: true,
+        type: true,
+        date: true,
+        distance: true,
+        duration: true,
+        elevationGain: true,
+        avgHeartRate: true,
+      },
+    }),
   ]);
 
   if (!user) {
     redirect("/onboarding");
   }
 
-  const dashboardStats = getDashboardStats(user.activities);
-  const bestEfforts = getDashboardBestEfforts(user.activities);
+  const dashboardStats = getDashboardStatsFromAggregate(periodStats);
+  const bestEfforts = getDashboardBestEfforts(medalActivities);
+  const totalPages = Math.max(1, Math.ceil(activityCount / activityPageSize));
 
   return (
     <main className="px-6 py-10 text-white">
@@ -96,7 +121,7 @@ export default async function DashboardPage({
             </h1>
             <p className="mt-2 max-w-2xl text-zinc-400">
               Tu perfil publico sera /{user.username}. Actividades cargadas:{" "}
-              {user.activities.length} en {getActivityDateRangeLabel(activeRange)}.
+              {activityCount} en {getActivityDateRangeLabel(activeRange)}.
             </p>
           </div>
 
@@ -147,9 +172,9 @@ export default async function DashboardPage({
               </div>
             </div>
 
-            {user.activities.length > 0 ? (
+            {activities.length > 0 ? (
               <div className="grid gap-4">
-                {user.activities.map((activity) => (
+                {activities.map((activity) => (
                   <Link
                     key={activity.id}
                     href={`/dashboard/activity/${activity.id}`}
@@ -190,6 +215,13 @@ export default async function DashboardPage({
                     </div>
                   </Link>
                 ))}
+                <PaginationControls
+                  activePage={activePage}
+                  totalPages={totalPages}
+                  basePath="/dashboard"
+                  range={activeRange}
+                  type={activeType}
+                />
               </div>
             ) : (
               <div className="rounded-lg border border-dashed border-zinc-800 bg-zinc-950/50 p-8">
@@ -218,7 +250,7 @@ export default async function DashboardPage({
               >
                 <StatsTableRow
                   label="Actividades"
-                  value={user.activities.length.toString()}
+                  value={activityCount.toString()}
                 />
                 <StatsTableRow
                   label="Distancia"
@@ -303,6 +335,71 @@ function MedalTableRow({
   );
 }
 
+function PaginationControls({
+  activePage,
+  totalPages,
+  basePath,
+  range,
+  type,
+}: {
+  activePage: number;
+  totalPages: number;
+  basePath: string;
+  range: string;
+  type: string | null;
+}) {
+  if (totalPages <= 1) {
+    return null;
+  }
+
+  return (
+    <div className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-3 text-sm">
+      <PaginationLink
+        href={buildPageHref(basePath, activePage - 1, range, type)}
+        disabled={activePage <= 1}
+      >
+        Anterior
+      </PaginationLink>
+      <span className="text-zinc-500">
+        Pagina {activePage} de {totalPages}
+      </span>
+      <PaginationLink
+        href={buildPageHref(basePath, activePage + 1, range, type)}
+        disabled={activePage >= totalPages}
+      >
+        Siguiente
+      </PaginationLink>
+    </div>
+  );
+}
+
+function PaginationLink({
+  href,
+  disabled,
+  children,
+}: {
+  href: string;
+  disabled: boolean;
+  children: ReactNode;
+}) {
+  if (disabled) {
+    return (
+      <span className="inline-flex h-9 items-center justify-center rounded-md border border-zinc-800 px-3 font-semibold text-zinc-700">
+        {children}
+      </span>
+    );
+  }
+
+  return (
+    <Link
+      href={href}
+      className="inline-flex h-9 items-center justify-center rounded-md border border-zinc-700 px-3 font-semibold text-zinc-200 transition hover:border-orange-500 hover:text-orange-200"
+    >
+      {children}
+    </Link>
+  );
+}
+
 function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div>
@@ -378,6 +475,37 @@ function normalizeActivityTypeFilter(type: string | string[] | undefined) {
   return normalized || null;
 }
 
+function normalizePage(page: string | string[] | undefined) {
+  const value = Number(Array.isArray(page) ? page[0] : page);
+
+  return Number.isInteger(value) && value > 0 ? value : 1;
+}
+
+function buildPageHref(
+  basePath: string,
+  page: number,
+  range: string,
+  type: string | null,
+) {
+  const searchParams = new URLSearchParams();
+
+  if (range) {
+    searchParams.set("range", range);
+  }
+
+  if (type) {
+    searchParams.set("type", type);
+  }
+
+  if (page > 1) {
+    searchParams.set("page", page.toString());
+  }
+
+  const query = searchParams.toString();
+
+  return query ? `${basePath}?${query}` : basePath;
+}
+
 function formatRaceDistance(distance: number) {
   if (distance === 400) {
     return "400 m";
@@ -410,41 +538,21 @@ function formatRaceDistance(distance: number) {
   return `${Math.round(distance / 1000)}K`;
 }
 
-function getDashboardStats(
-  activities: {
-    name: string;
-    distance: number;
-    duration: number;
+function getDashboardStatsFromAggregate(stats: {
+  _sum: {
+    distance: number | null;
+    duration: number | null;
     elevationGain: number | null;
-  }[],
-) {
-  const totalDistance = activities.reduce(
-    (sum, activity) => sum + activity.distance,
-    0,
-  );
-  const totalDuration = activities.reduce(
-    (sum, activity) => sum + activity.duration,
-    0,
-  );
-  const totalElevation = activities.reduce(
-    (sum, activity) => sum + (activity.elevationGain ?? 0),
-    0,
-  );
-  const longestActivity = activities.reduce<
-    { name: string; distance: number } | null
-  >((longest, activity) => {
-    if (!longest || activity.distance > longest.distance) {
-      return { name: activity.name, distance: activity.distance };
-    }
-
-    return longest;
-  }, null);
+  };
+}) {
+  const totalDistance = stats._sum.distance ?? 0;
+  const totalDuration = stats._sum.duration ?? 0;
+  const totalElevation = stats._sum.elevationGain ?? 0;
 
   return {
     totalDistance,
     totalDuration,
     totalElevation,
-    longestActivity,
     marathonEquivalent: totalDistance / 42195,
   };
 }
