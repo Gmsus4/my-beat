@@ -73,7 +73,8 @@ export async function generateMetadata({
     .filter(Boolean)
     .join(" - ");
   const url = `/${activity.user.username}/activity/${id}`;
-  const imageUrl = `${url}/opengraph-image`;
+  const absoluteUrl = getAbsoluteUrl(url);
+  const imageUrl = getAbsoluteUrl(`${url}/opengraph-image`);
 
   return {
     title,
@@ -85,7 +86,7 @@ export async function generateMetadata({
       title,
       description,
       type: "article",
-      url,
+      url: absoluteUrl,
       publishedTime: activity.date.toISOString(),
       authors: [activity.user.name],
       images: [{ url: imageUrl, width: 1200, height: 630, alt: title }],
@@ -426,6 +427,12 @@ function formatActivityType(type: string) {
   };
 
   return labels[type.toLowerCase()] ?? type;
+}
+
+function getAbsoluteUrl(path: string) {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+
+  return new URL(path, baseUrl).toString();
 }
 
 function getShareMetrics({
