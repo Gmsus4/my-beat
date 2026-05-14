@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { ActivityCharts } from "@/app/components/activity-charts";
+import { ActivityShareImageButton } from "@/app/components/activity-share-image-button";
 import { ActivitySettingsForm } from "@/app/dashboard/activity/[id]/activity-settings-form";
 import { DeleteActivityButton } from "@/app/dashboard/activity/[id]/delete-activity-button";
 import { RouteCanvas } from "@/app/dashboard/activity/[id]/route-canvas";
@@ -60,6 +61,11 @@ export default async function ActivityDetailPage({ params }: PageProps) {
       splitsData: true,
       chartData: true,
       createdAt: true,
+      user: {
+        select: {
+          username: true,
+        },
+      },
     },
   });
 
@@ -224,6 +230,20 @@ export default async function ActivityDetailPage({ params }: PageProps) {
                 </StatsTableSection>
               ) : null}
             </section>
+            <ActivityShareImageButton
+              activityName={activity.name}
+              metrics={getShareMetrics({
+                distance: activity.distance,
+                duration: activity.duration,
+                showSpeed: activity.showSpeed,
+              })}
+              points={activity.showMap ? points : []}
+              shareUrl={
+                activity.isPublic
+                  ? `/${activity.user.username}/activity/${activity.id}`
+                  : null
+              }
+            />
           </aside>
         </div>
 
@@ -378,4 +398,34 @@ function formatHeartRate(heartRate: number | null) {
 
 function formatCalories(calories: number | null) {
   return calories === null ? "--" : `${calories} kcal`;
+}
+
+function getShareMetrics({
+  distance,
+  duration,
+  showSpeed,
+}: {
+  distance: number;
+  duration: number;
+  showSpeed: boolean;
+}) {
+  return [
+    { label: "Distancia", value: formatDistance(distance) },
+    showSpeed ? { label: "Ritmo", value: formatPace(distance, duration) } : null,
+    { label: "Duracion", value: formatShareDuration(duration) },
+  ].filter((metric): metric is { label: string; value: string } =>
+    Boolean(metric),
+  );
+}
+
+function formatShareDuration(totalSeconds: number) {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = Math.floor(totalSeconds % 60);
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+
+  return `${minutes}m ${seconds}s`;
 }

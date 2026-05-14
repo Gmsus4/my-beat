@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ActivityCharts } from "@/app/components/activity-charts";
+import { ActivityShareImageButton } from "@/app/components/activity-share-image-button";
 import { RouteCanvas } from "@/app/dashboard/activity/[id]/route-canvas";
 import {
   readStoredChartPoints,
@@ -71,8 +72,8 @@ export async function generateMetadata({
   ]
     .filter(Boolean)
     .join(" - ");
-  const images = getMetadataImages(activity.user.cover, activity.user.avatar);
   const url = `/${activity.user.username}/activity/${id}`;
+  const imageUrl = `${url}/opengraph-image`;
 
   return {
     title,
@@ -87,13 +88,13 @@ export async function generateMetadata({
       url,
       publishedTime: activity.date.toISOString(),
       authors: [activity.user.name],
-      images,
+      images: [{ url: imageUrl, width: 1200, height: 630, alt: title }],
     },
     twitter: {
-      card: images.length > 0 ? "summary_large_image" : "summary",
+      card: "summary_large_image",
       title,
       description,
-      images,
+      images: [imageUrl],
     },
   };
 }
@@ -299,6 +300,17 @@ export default async function PublicActivityPage({ params }: PageProps) {
                 </StatsTableSection>
               ) : null}
             </section>
+            <ActivityShareImageButton
+              activityName={activity.name}
+              metrics={getShareMetrics({
+                distance: activity.distance,
+                duration: activity.duration,
+                showSpeed: activity.showSpeed,
+              })}
+              points={activity.showMap ? points : []}
+              shareUrl={`/${activity.user.username}/activity/${id}`}
+              showDownload={false}
+            />
           </aside>
         </div>
       </section>
@@ -416,8 +428,32 @@ function formatActivityType(type: string) {
   return labels[type.toLowerCase()] ?? type;
 }
 
-function getMetadataImages(...urls: (string | null)[]) {
-  return urls
-    .filter((url): url is string => Boolean(url))
-    .map((url) => ({ url }));
+function getShareMetrics({
+  distance,
+  duration,
+  showSpeed,
+}: {
+  distance: number;
+  duration: number;
+  showSpeed: boolean;
+}) {
+  return [
+    { label: "Distancia", value: formatDistance(distance) },
+    showSpeed ? { label: "Ritmo", value: formatPace(distance, duration) } : null,
+    { label: "Duracion", value: formatShareDuration(duration) },
+  ].filter((metric): metric is { label: string; value: string } =>
+    Boolean(metric),
+  );
+}
+
+function formatShareDuration(totalSeconds: number) {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = Math.floor(totalSeconds % 60);
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+
+  return `${minutes}m ${seconds}s`;
 }

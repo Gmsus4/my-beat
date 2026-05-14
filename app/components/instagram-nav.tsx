@@ -44,7 +44,7 @@ export function InstagramNav({ user }: InstagramNavProps) {
               className="block h-[36px] w-[36px] max-w-none shrink-0 object-contain object-center"
             />
           </span>
-          <span className="whitespace-nowrap text-2xl font-semibold uppercase tracking-normal opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+          <span className="whitespace-nowrap font-['Outfit'] text-2xl font-black uppercase tracking-normal opacity-0 transition-opacity duration-150 group-hover:opacity-100">
             mybeat
           </span>
         </Link>
