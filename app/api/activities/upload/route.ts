@@ -27,13 +27,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const payload = (await request.json()) as {
-      fileName?: unknown;
-      gpxData?: unknown;
-    };
-    const fileName =
-      typeof payload.fileName === "string" ? payload.fileName : "";
-    const gpxData = typeof payload.gpxData === "string" ? payload.gpxData : "";
+    const { fileName, gpxData, size } = await readUploadPayload(request);
 
     if (!gpxData) {
       return NextResponse.json(
@@ -49,7 +43,7 @@ export async function POST(request: Request) {
       );
     }
 
-    if (new TextEncoder().encode(gpxData).byteLength > maxFileSize) {
+    if (size > maxFileSize) {
       return NextResponse.json(
         { error: "El archivo GPX debe pesar menos de 8 MB." },
         { status: 400 },
@@ -93,4 +87,43 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
+}
+
+async function readUploadPayload(request: Request) {
+  const contentType = request.headers.get("content-type") ?? "";
+
+  if (contentType.includes("multipart/form-data")) {
+    const formData = await request.formData();
+    const file = formData.get("gpx");
+
+    if (!(file instanceof File)) {
+      return { fileName: "", gpxData: "", size: 0 };
+    }
+
+    return {
+      fileName: file.name,
+      gpxData: await readUploadedFile(file),
+      size: file.size,
+    };
+  }
+
+  const payload = (await request.json()) as {
+    fileName?: unknown;
+    gpxData?: unknown;
+  };
+  const gpxData = typeof payload.gpxData === "string" ? payload.gpxData : "";
+
+  return {
+    fileName: typeof payload.fileName === "string" ? payload.fileName : "",
+    gpxData,
+    size: new TextEncoder().encode(gpxData).byteLength,
+  };
+}
+
+async function readUploadedFile(file: File) {
+  if (typeof file.text === "function") {
+    return file.text();
+  }
+
+  return new TextDecoder().decode(await file.arrayBuffer());
 }

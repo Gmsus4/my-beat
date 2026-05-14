@@ -36,10 +36,15 @@ export async function updateActivitySettings(
   }
 
   const name = String(formData.get("name") ?? "").trim();
+  const type = String(formData.get("type") ?? "").trim().toLowerCase();
   const description = String(formData.get("description") ?? "").trim();
 
   if (name.length < 3 || name.length > 80) {
     return { error: "El nombre debe tener entre 3 y 80 caracteres." };
+  }
+
+  if (type.length < 2 || type.length > 40) {
+    return { error: "El tipo debe tener entre 2 y 40 caracteres." };
   }
 
   if (description.length > 500) {
@@ -50,6 +55,7 @@ export async function updateActivitySettings(
     where: { id: activityId },
     data: {
       name,
+      type,
       description: description || null,
       isPublic: formData.get("isPublic") === "on",
       showMap: formData.get("showMap") === "on",

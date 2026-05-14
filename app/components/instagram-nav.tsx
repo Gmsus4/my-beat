@@ -16,7 +16,7 @@ export function InstagramNav({ user }: InstagramNavProps) {
   const pathname = usePathname();
   const publicProfileHref = user ? `/${user.username}` : "/";
   const items = user
-      ? [
+    ? [
         { href: "/", label: "Inicio", icon: HomeIcon },
         { href: "/dashboard", label: "Dashboard", icon: StatsIcon },
         { href: "/dashboard/search", label: "Buscar", icon: SearchIcon },
@@ -25,6 +25,15 @@ export function InstagramNav({ user }: InstagramNavProps) {
         { href: publicProfileHref, label: "Publico", icon: GlobeIcon },
       ]
     : [{ href: "/", label: "Entrar", icon: HomeIcon }];
+  const mobileItems = user
+    ? [
+        { href: "/", label: "Inicio", icon: HomeIcon },
+        { href: "/dashboard", label: "Dashboard", icon: StatsIcon },
+        { href: "/dashboard/search", label: "Buscar", icon: SearchIcon },
+        { href: "/dashboard/upload", label: "Crear", icon: PlusIcon },
+        { href: publicProfileHref, label: "Perfil", icon: UserIcon },
+      ]
+    : items;
 
   return (
     <>
@@ -94,7 +103,7 @@ export function InstagramNav({ user }: InstagramNavProps) {
       </aside>
 
       <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-zinc-900 bg-black/95 px-2 py-2 backdrop-blur lg:hidden">
-        {items.slice(0, 5).map((item) => (
+        {mobileItems.map((item) => (
           <MobileNavLink
             key={item.href}
             href={item.href}

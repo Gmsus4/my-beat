@@ -121,22 +121,10 @@ export function UploadForm() {
         }
 
         try {
-          setPhase("reading");
-          const gpxData = await readBrowserFile(file);
-
           setUploadStepIndex(0);
           setPhase("uploading");
 
-          const response = await fetch("/api/activities/upload", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              fileName: file.name,
-              gpxData,
-            }),
-          });
+          const response = await uploadFile(file);
           const payload = (await response.json().catch(() => ({}))) as {
             error?: string;
           };
@@ -295,6 +283,33 @@ export function UploadForm() {
       `}</style>
     </form>
   );
+}
+
+async function uploadFile(file: File) {
+  const uploadData = new FormData();
+  uploadData.append("gpx", file, file.name);
+
+  const formDataResponse = await fetch("/api/activities/upload", {
+    method: "POST",
+    body: uploadData,
+  });
+
+  if (formDataResponse.ok) {
+    return formDataResponse;
+  }
+
+  const gpxData = await readBrowserFile(file);
+
+  return fetch("/api/activities/upload", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      fileName: file.name,
+      gpxData,
+    }),
+  });
 }
 
 async function readBrowserFile(file: File) {

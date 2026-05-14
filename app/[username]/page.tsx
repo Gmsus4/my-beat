@@ -20,6 +20,7 @@ import { ProfileStatsPanel } from "@/app/[username]/profile-stats-panel";
 import { ActivityTypeFilter } from "@/app/components/activity-type-filter";
 import { DateRangeFilter } from "@/app/components/date-range-filter";
 import { FollowButton } from "@/app/components/follow-button";
+import { ShareProfileButton } from "@/app/components/share-profile-button";
 import {
   getActivityDateFilter,
   getActivityDateRangeLabel,
@@ -267,13 +268,19 @@ export default async function PublicProfilePage({
                 </p>
               </div>
             </div>
-            <FollowButton
-              username={user.username}
-              isCurrentUser={isCurrentUser}
-              isFollowing={isFollowing}
-            />
-            {isCurrentUser ? (
-              <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+              <FollowButton
+                username={user.username}
+                isCurrentUser={isCurrentUser}
+                isFollowing={isFollowing}
+              />
+              <ShareProfileButton
+                name={user.name}
+                username={user.username}
+                profilePath={`/${user.username}`}
+              />
+              {isCurrentUser ? (
+                <>
                 <Link
                   href="/dashboard/profile"
                   className="inline-flex h-10 items-center justify-center rounded-md bg-orange-500 px-4 text-sm font-semibold text-black transition hover:bg-orange-400"
@@ -286,8 +293,9 @@ export default async function PublicProfilePage({
                 >
                   Editar actividades
                 </Link>
-              </div>
-            ) : null}
+                </>
+              ) : null}
+            </div>
           </div>
 
           {user.bio ? (

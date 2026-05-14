@@ -247,23 +247,11 @@ export default async function ActivityDetailPage({ params }: PageProps) {
           </aside>
         </div>
 
-        <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-5">
-          <h2 className="text-lg font-semibold">Visibilidad</h2>
-          <div className="mt-4 grid gap-3 text-sm text-zinc-300 sm:grid-cols-2 lg:grid-cols-4">
-            <Visibility label="Mapa" enabled={activity.showMap} />
-            <Visibility label="Velocidad" enabled={activity.showSpeed} />
-            <Visibility
-              label="Frecuencia cardiaca"
-              enabled={activity.showHeartRate}
-            />
-            <Visibility label="Calorias" enabled={activity.showCalories} />
-          </div>
-        </div>
-
         <ActivitySettingsForm
           activity={{
             id: activity.id,
             name: activity.name,
+            type: activity.type,
             description: activity.description,
             isPublic: activity.isPublic,
             showMap: activity.showMap,
@@ -309,17 +297,6 @@ function StatsTableRow({ label, value }: { label: string; value: string }) {
     <div className="grid grid-cols-[1fr_auto] gap-3 px-3 py-2 text-xs odd:bg-zinc-900/45 even:bg-black/30">
       <span className="font-medium text-zinc-200">{label}</span>
       <span className="font-semibold text-white">{value}</span>
-    </div>
-  );
-}
-
-function Visibility({ label, enabled }: { label: string; enabled: boolean }) {
-  return (
-    <div className="flex items-center justify-between rounded-md border border-zinc-800 px-3 py-2">
-      <span>{label}</span>
-      <span className={enabled ? "text-orange-500" : "text-zinc-600"}>
-        {enabled ? "Visible" : "Oculto"}
-      </span>
     </div>
   );
 }

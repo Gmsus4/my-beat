@@ -88,15 +88,16 @@ export async function parseGpxUploadData(
 ): Promise<ParsedUploadActivityData> {
   const parser = await parseGpx(xml);
   const track = getMainTrack(parser);
+  const heartRates = getTrackPointHeartRates(xml);
 
   if (!track || track.points.length < 2) {
     throw new Error("El archivo GPX no contiene una ruta valida.");
   }
 
   return {
-    activity: getParsedActivity(parser, track),
+    activity: getParsedActivity(parser, track, heartRates),
     splitsData: getKilometerSplits(track),
-    chartData: getChartSeries(parser, track),
+    chartData: getChartSeries(track, heartRates),
     bestEffortsData: getBestEfforts(track, bestEffortTargetDistances),
   };
 }
@@ -109,12 +110,13 @@ export async function parseGpxActivity(xml: string): Promise<ParsedActivity> {
     throw new Error("El archivo GPX no contiene una ruta valida.");
   }
 
-  return getParsedActivity(parser, track);
+  return getParsedActivity(parser, track, getTrackPointHeartRates(xml));
 }
 
 function getParsedActivity(
   parser: ParsedGpx,
   track: GpxTrack,
+  heartRates: (number | null)[],
 ): ParsedActivity {
   const points = track.points as GpxPoint[];
   const firstPointWithTime = points.find((point) => point.time);
@@ -132,8 +134,9 @@ function getParsedActivity(
       : 0;
   const distance = track.distance.total;
   const speeds = getSegmentSpeeds(points);
-  const document = parser.xmlSource as unknown as Document;
-  const heartRates = getHeartRates(document);
+  const validHeartRates = heartRates.filter(
+    (heartRate): heartRate is number => heartRate !== null,
+  );
   const type = normalizeActivityType(track.type);
   const date =
     firstPointWithTime?.time ??
@@ -149,13 +152,14 @@ function getParsedActivity(
     avgSpeed: duration > 0 ? distance / duration : null,
     maxSpeed: speeds.length > 0 ? Math.max(...speeds) : null,
     avgHeartRate:
-      heartRates.length > 0
+      validHeartRates.length > 0
         ? Math.round(
-            heartRates.reduce((sum, heartRate) => sum + heartRate, 0) /
-              heartRates.length,
+            validHeartRates.reduce((sum, heartRate) => sum + heartRate, 0) /
+              validHeartRates.length,
           )
         : null,
-    maxHeartRate: heartRates.length > 0 ? Math.max(...heartRates) : null,
+    maxHeartRate:
+      validHeartRates.length > 0 ? Math.max(...validHeartRates) : null,
     polyline: JSON.stringify(samplePoints(points)),
   };
 }
@@ -356,13 +360,11 @@ export async function parseGpxChartSeries(
     return [];
   }
 
-  return getChartSeries(parser, track);
+  return getChartSeries(track, getTrackPointHeartRates(xml));
 }
 
-function getChartSeries(parser: ParsedGpx, track: GpxTrack) {
+function getChartSeries(track: GpxTrack, heartRates: (number | null)[]) {
   const points = track.points as GpxPoint[];
-  const document = parser.xmlSource as unknown as Document;
-  const trackPointMetrics = getTrackPointMetrics(document);
   const cumulativeDistances = getCumulativeDistances(
     points,
     Array.isArray(track.distance.cumul)
@@ -374,7 +376,6 @@ function getChartSeries(parser: ParsedGpx, track: GpxTrack) {
 
   return points
     .map((point, index) => {
-      const metrics = trackPointMetrics[index];
       const elevation =
         typeof point.ele === "number" && Number.isFinite(point.ele)
           ? Math.round(point.ele * 10) / 10
@@ -383,7 +384,7 @@ function getChartSeries(parser: ParsedGpx, track: GpxTrack) {
       return {
         distance: roundDistance(cumulativeDistances[index] ?? 0),
         elevation,
-        heartRate: metrics?.heartRate ?? null,
+        heartRate: heartRates[index] ?? null,
         pace: paceValues[index] ?? null,
       };
     })
@@ -587,44 +588,21 @@ async function parseGpx(xml?: string): Promise<ParsedGpx> {
   return parser as unknown as ParsedGpx;
 }
 
-function getHeartRates(document: Document) {
-  const heartRates: number[] = [];
-  const elements = Array.from(document.getElementsByTagName("*"));
+function getTrackPointHeartRates(xml: string) {
+  const heartRates: (number | null)[] = [];
+  const trackPointPattern = /<trkpt\b[\s\S]*?<\/trkpt>/gi;
+  const heartRatePattern =
+    /<(?:[\w.-]+:)?hr\b[^>]*>\s*([0-9]+(?:\.[0-9]+)?)\s*<\/(?:[\w.-]+:)?hr>/i;
 
-  for (const element of elements) {
-    if (element.localName.toLowerCase() !== "hr") {
-      continue;
-    }
+  for (const match of xml.matchAll(trackPointPattern)) {
+    const value = Number(match[0].match(heartRatePattern)?.[1]);
 
-    const value = Number(element.textContent);
-
-    if (Number.isFinite(value) && value > 0) {
-      heartRates.push(Math.round(value));
-    }
+    heartRates.push(
+      Number.isFinite(value) && value > 0 ? Math.round(value) : null,
+    );
   }
 
   return heartRates;
-}
-
-function getTrackPointMetrics(document: Document) {
-  const points = Array.from(document.getElementsByTagName("*")).filter(
-    (element) => element.localName.toLowerCase() === "trkpt",
-  );
-
-  return points.map((point) => {
-    const children = Array.from(point.getElementsByTagName("*"));
-    const heartRateElement = children.find(
-      (element) => element.localName.toLowerCase() === "hr",
-    );
-    const heartRate = Number(heartRateElement?.textContent);
-
-    return {
-      heartRate:
-        Number.isFinite(heartRate) && heartRate > 0
-          ? Math.round(heartRate)
-          : null,
-    };
-  });
 }
 
 function samplePoints(points: GpxPoint[]) {
