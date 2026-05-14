@@ -12,6 +12,11 @@ export type ProfileSettingsState = {
   success?: string;
 };
 
+export type DeleteAccountState = {
+  error?: string;
+  deleted?: boolean;
+};
+
 const usernamePattern = /^[a-z0-9_]{3,24}$/;
 const socialPlatforms = new Set([
   "instagram",
@@ -157,6 +162,56 @@ export async function updateProfileSettings(
   revalidatePath(`/${username}`);
 
   return { success: "Perfil actualizado." };
+}
+
+export async function deleteAccount(
+  _state: DeleteAccountState,
+  formData: FormData,
+): Promise<DeleteAccountState> {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.email) {
+    redirect("/");
+  }
+
+  const currentUser = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    select: { id: true, username: true },
+  });
+
+  if (!currentUser) {
+    redirect("/onboarding");
+  }
+
+  const confirmation = String(formData.get("confirmation") ?? "")
+    .trim()
+    .toLowerCase();
+
+  if (confirmation !== currentUser.username.toLowerCase()) {
+    return {
+      error: `Escribe ${currentUser.username} para confirmar la eliminacion.`,
+    };
+  }
+
+  await prisma.activity.deleteMany({
+    where: { userId: currentUser.id },
+  });
+
+  await prisma.follow.deleteMany({
+    where: {
+      OR: [{ followerId: currentUser.id }, { followingId: currentUser.id }],
+    },
+  });
+
+  await prisma.user.delete({
+    where: { id: currentUser.id },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/dashboard");
+  revalidatePath(`/${currentUser.username}`);
+
+  return { deleted: true };
 }
 
 function normalizeSocialLinks(

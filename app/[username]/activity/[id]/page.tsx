@@ -1,14 +1,9 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { after } from "next/server";
 
 import { ActivityCharts } from "@/app/components/activity-charts";
 import { RouteCanvas } from "@/app/dashboard/activity/[id]/route-canvas";
-import {
-  parseGpxChartSeries,
-  parseGpxKilometerSplits,
-} from "@/lib/gpx/parse-activity";
 import {
   readStoredChartPoints,
   readStoredSplits,
@@ -125,7 +120,6 @@ export default async function PublicActivityPage({ params }: PageProps) {
       maxHeartRate: true,
       calories: true,
       polyline: true,
-      gpxData: true,
       splitsData: true,
       chartData: true,
       showMap: true,
@@ -146,36 +140,8 @@ export default async function PublicActivityPage({ params }: PageProps) {
   }
 
   const points = parsePolyline(activity.polyline);
-  const storedSplits = readStoredSplits(activity.splitsData);
-  const storedChartPoints = readStoredChartPoints(activity.chartData);
-  const splits =
-    activity.showSpeed && storedSplits.length > 0
-      ? storedSplits
-      : activity.gpxData && activity.showSpeed
-        ? await parseGpxKilometerSplits(activity.gpxData)
-        : [];
-  const chartPoints =
-    storedChartPoints.length > 0
-      ? storedChartPoints
-      : activity.gpxData
-        ? await parseGpxChartSeries(activity.gpxData)
-        : [];
-
-  if (
-    activity.gpxData &&
-    (storedSplits.length === 0 || storedChartPoints.length === 0) &&
-    (splits.length > 0 || chartPoints.length > 0)
-  ) {
-    after(async () => {
-      await prisma.activity.update({
-        where: { id },
-        data: {
-          ...(storedSplits.length === 0 ? { splitsData: splits } : {}),
-          ...(storedChartPoints.length === 0 ? { chartData: chartPoints } : {}),
-        },
-      });
-    });
-  }
+  const splits = activity.showSpeed ? readStoredSplits(activity.splitsData) : [];
+  const chartPoints = readStoredChartPoints(activity.chartData);
 
   return (
     <main className="min-h-screen bg-black px-6 py-10 text-white">

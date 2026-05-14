@@ -5,6 +5,28 @@ type GpxPoint = Point & {
   time: Date | null;
 };
 
+type GpxTrack = {
+  name?: string | null;
+  type?: string | null;
+  points: GpxPoint[];
+  distance: {
+    total: number;
+    cumul?: unknown;
+  };
+  elevation: {
+    pos?: number | null;
+  };
+};
+
+type ParsedGpx = {
+  tracks: GpxTrack[];
+  routes: GpxTrack[];
+  metadata: {
+    time?: string | Date | null;
+  };
+  xmlSource: unknown;
+};
+
 type ParsedActivity = {
   name: string;
   type: string;
@@ -54,30 +76,46 @@ export const bestEffortTargetDistances = [
   42195,
 ];
 
-export async function parseGpxActivity(xml: string): Promise<ParsedActivity> {
-  if (!("canParse" in URL)) {
-    Object.defineProperty(URL, "canParse", {
-      value(url: string | URL, base?: string | URL) {
-        try {
-          new URL(url, base);
-          return true;
-        } catch {
-          return false;
-        }
-      },
-    });
-  }
+export type ParsedUploadActivityData = {
+  activity: ParsedActivity;
+  splitsData: KilometerSplit[];
+  chartData: ActivityChartPoint[];
+  bestEffortsData: BestEffort[];
+};
 
-  const { default: GpxParser } = await import("gpxparser");
-  const parser = new GpxParser();
-  parser.parse(xml);
-
-  const track = parser.tracks[0] ?? parser.routes[0];
+export async function parseGpxUploadData(
+  xml: string,
+): Promise<ParsedUploadActivityData> {
+  const parser = await parseGpx(xml);
+  const track = getMainTrack(parser);
 
   if (!track || track.points.length < 2) {
     throw new Error("El archivo GPX no contiene una ruta valida.");
   }
 
+  return {
+    activity: getParsedActivity(parser, track),
+    splitsData: getKilometerSplits(track),
+    chartData: getChartSeries(parser, track),
+    bestEffortsData: getBestEfforts(track, bestEffortTargetDistances),
+  };
+}
+
+export async function parseGpxActivity(xml: string): Promise<ParsedActivity> {
+  const parser = await parseGpx(xml);
+  const track = getMainTrack(parser);
+
+  if (!track || track.points.length < 2) {
+    throw new Error("El archivo GPX no contiene una ruta valida.");
+  }
+
+  return getParsedActivity(parser, track);
+}
+
+function getParsedActivity(
+  parser: ParsedGpx,
+  track: GpxTrack,
+): ParsedActivity {
   const points = track.points as GpxPoint[];
   const firstPointWithTime = points.find((point) => point.time);
   const lastPointWithTime = [...points].reverse().find((point) => point.time);
@@ -182,16 +220,21 @@ export async function parseGpxKilometerSplits(
   xml: string,
 ): Promise<KilometerSplit[]> {
   const parser = await parseGpx(xml);
-  const track = parser.tracks[0] ?? parser.routes[0];
+  const track = getMainTrack(parser);
 
   if (!track || track.points.length < 2) {
     return [];
   }
 
+  return getKilometerSplits(track);
+}
+
+function getKilometerSplits(track: GpxTrack) {
   const points = track.points as GpxPoint[];
-  const cumulativeDistances = Array.isArray(track.distance.cumul)
-    ? (track.distance.cumul as unknown as number[])
-    : [];
+  const cumulativeDistances = getCumulativeDistances(
+    points,
+    Array.isArray(track.distance.cumul) ? track.distance.cumul : [],
+  );
   const splits: KilometerSplit[] = [];
   let nextKilometer = 1;
   let splitStartTime = points.find((point) => point.time)?.time ?? null;
@@ -274,16 +317,21 @@ export async function parseGpxBestEfforts(
   targetDistances: number[],
 ): Promise<BestEffort[]> {
   const parser = await parseGpx(xml);
-  const track = parser.tracks[0] ?? parser.routes[0];
+  const track = getMainTrack(parser);
 
   if (!track || track.points.length < 2) {
     return [];
   }
 
+  return getBestEfforts(track, targetDistances);
+}
+
+function getBestEfforts(track: GpxTrack, targetDistances: number[]) {
   const points = track.points as GpxPoint[];
-  const cumulativeDistances = Array.isArray(track.distance.cumul)
-    ? (track.distance.cumul as unknown as number[])
-    : [];
+  const cumulativeDistances = getCumulativeDistances(
+    points,
+    Array.isArray(track.distance.cumul) ? track.distance.cumul : [],
+  );
 
   return targetDistances
     .map((distance) => {
@@ -302,12 +350,16 @@ export async function parseGpxChartSeries(
   xml: string,
 ): Promise<ActivityChartPoint[]> {
   const parser = await parseGpx(xml);
-  const track = parser.tracks[0] ?? parser.routes[0];
+  const track = getMainTrack(parser);
 
   if (!track || track.points.length < 2) {
     return [];
   }
 
+  return getChartSeries(parser, track);
+}
+
+function getChartSeries(parser: ParsedGpx, track: GpxTrack) {
   const points = track.points as GpxPoint[];
   const document = parser.xmlSource as unknown as Document;
   const trackPointMetrics = getTrackPointMetrics(document);
@@ -508,7 +560,13 @@ function distanceBetween(from: GpxPoint, to: GpxPoint) {
   return radius * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }
 
-async function parseGpx(xml: string) {
+function getMainTrack(parser: ParsedGpx) {
+  return parser.tracks[0] ?? parser.routes[0] ?? null;
+}
+
+async function parseGpx(): Promise<ParsedGpx>;
+async function parseGpx(xml: string): Promise<ParsedGpx>;
+async function parseGpx(xml?: string): Promise<ParsedGpx> {
   if (!("canParse" in URL)) {
     Object.defineProperty(URL, "canParse", {
       value(url: string | URL, base?: string | URL) {
@@ -524,9 +582,9 @@ async function parseGpx(xml: string) {
 
   const { default: GpxParser } = await import("gpxparser");
   const parser = new GpxParser();
-  parser.parse(xml);
+  parser.parse(xml ?? "");
 
-  return parser;
+  return parser as unknown as ParsedGpx;
 }
 
 function getHeartRates(document: Document) {

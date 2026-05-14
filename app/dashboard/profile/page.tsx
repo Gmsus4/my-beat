@@ -2,10 +2,11 @@ import { getServerSession } from "next-auth/next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { SignOutButton } from "@/app/components/sign-out-button";
+import { DeleteAccountForm } from "@/app/dashboard/profile/delete-account-form";
 import { ProfileForm } from "@/app/dashboard/profile/profile-form";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { SignOutButton } from "@/app/components/sign-out-button";
 
 export default async function ProfileSettingsPage() {
   const session = await getServerSession(authOptions);
@@ -68,6 +69,8 @@ export default async function ProfileSettingsPage() {
             <SignOutButton />
           </div>
         </div>
+
+        <DeleteAccountForm username={user.username} />
       </section>
     </main>
   );
