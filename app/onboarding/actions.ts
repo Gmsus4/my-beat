@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { isReservedUsername } from "@/lib/reserved-usernames";
 
 export type OnboardingState = {
   error?: string;
@@ -31,6 +32,10 @@ export async function completeOnboarding(
       error:
         "Usa 3 a 24 caracteres: letras minusculas, numeros o guion bajo.",
     };
+  }
+
+  if (isReservedUsername(username)) {
+    return { error: "Ese username esta reservado por MyBeat." };
   }
 
   const existingUsername = await prisma.user.findUnique({

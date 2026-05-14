@@ -33,6 +33,7 @@ import {
 } from "@/lib/gpx/parse-activity";
 import { readStoredBestEfforts } from "@/lib/gpx/stored-activity-data";
 import { prisma } from "@/lib/prisma";
+import { isReservedUsername } from "@/lib/reserved-usernames";
 
 type PageProps = {
   params: Promise<{ username: string }>;
@@ -48,7 +49,6 @@ type RoutePoint = {
   lon: number;
 };
 
-const reservedRoutes = new Set(["api", "dashboard", "onboarding"]);
 const activityPageSize = 30;
 
 export async function generateMetadata({
@@ -58,7 +58,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { username } = await params;
 
-  if (reservedRoutes.has(username.toLowerCase())) {
+  if (isReservedUsername(username)) {
     return {};
   }
 
@@ -134,7 +134,7 @@ export default async function PublicProfilePage({
   const activePage = normalizePage(page);
   const session = await getServerSession(authOptions);
 
-  if (reservedRoutes.has(username.toLowerCase())) {
+  if (isReservedUsername(username)) {
     notFound();
   }
 
