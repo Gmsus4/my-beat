@@ -5,6 +5,9 @@ export const metadata: Metadata = {
   title: "Condiciones del servicio",
   description:
     "Consulta las reglas de uso de MyBeat para subir y compartir actividades deportivas.",
+  alternates: {
+    canonical: "/terms",
+  },
 };
 
 const sections = [

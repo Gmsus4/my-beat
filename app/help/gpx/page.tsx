@@ -4,7 +4,10 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Como subir un GPX",
   description:
-    "Aprende como obtener un archivo GPX desde tus apps deportivas y subirlo a Mybeat.",
+    "Aprende como obtener un archivo GPX desde tus apps deportivas y subirlo a MyBeat.",
+  alternates: {
+    canonical: "/help/gpx",
+  },
 };
 
 const steps = [

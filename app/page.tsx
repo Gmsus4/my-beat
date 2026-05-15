@@ -1,4 +1,5 @@
 import { getServerSession } from "next-auth/next";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -8,6 +9,28 @@ import { GoogleLoginButton } from "@/app/components/google-login-button";
 import { authOptions } from "@/lib/auth";
 import { getFollowedFeedPage } from "@/lib/feed";
 import { prisma } from "@/lib/prisma";
+
+export const metadata: Metadata = {
+  title: "MyBeat - Comparte tus metricas GPX con privacidad",
+  description:
+    "Diario de actividad fisica para subir GPX, visualizar metricas deportivas y compartir tu progreso sin exponer necesariamente tus rutas exactas.",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "MyBeat - Comparte tus metricas GPX con privacidad",
+    description:
+      "Sube archivos GPX, controla la visibilidad de tus datos y comparte tu progreso con un perfil publico.",
+    url: "/",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "MyBeat - Comparte tus metricas GPX con privacidad",
+    description:
+      "Sube archivos GPX, controla la visibilidad de tus datos y comparte tu progreso con un perfil publico.",
+  },
+};
 
 export default async function Home() {
   const session = await getServerSession(authOptions);
@@ -62,8 +85,28 @@ export default async function Home() {
 }
 
 function Landing() {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "MyBeat",
+    applicationCategory: "HealthApplication",
+    operatingSystem: "Web",
+    url: process.env.NEXT_PUBLIC_APP_URL ?? "https://my-beatme.vercel.app",
+    description:
+      "Diario de actividad fisica para subir archivos GPX, visualizar metricas deportivas y compartir progreso con control de privacidad geografica.",
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+    },
+  };
+
   return (
     <main className="min-h-screen bg-black px-6 py-8 text-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <section className="mx-auto grid min-h-[calc(100vh-4rem)] w-full max-w-7xl gap-10 lg:grid-cols-[minmax(0,1fr)_430px] lg:items-center">
         <div className="max-w-3xl">
           <div className="flex items-center gap-3">

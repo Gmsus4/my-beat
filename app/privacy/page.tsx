@@ -5,6 +5,9 @@ export const metadata: Metadata = {
   title: "Politica de privacidad",
   description:
     "Conoce como MyBeat usa tu cuenta de Google y los archivos GPX que subes.",
+  alternates: {
+    canonical: "/privacy",
+  },
 };
 
 const sections = [

@@ -6,14 +6,27 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL ?? "https://my-beatme.vercel.app/", 
+    process.env.NEXT_PUBLIC_APP_URL ?? "https://my-beatme.vercel.app/",
   ),
   title: {
-    default: "Mybeat",
-    template: "%s | Mybeat",
+    default: "MyBeat - Diario de actividad fisica seguro",
+    template: "%s | MyBeat",
   },
-  description: "Visualiza y comparte tus actividades deportivas desde archivos GPX.",
-  applicationName: "Mybeat",
+  description:
+    "Sube archivos GPX, visualiza tus metricas deportivas y comparte tu progreso con control de privacidad geografica.",
+  applicationName: "MyBeat",
+  keywords: [
+    "GPX",
+    "actividad fisica",
+    "running",
+    "caminatas",
+    "diario deportivo",
+    "privacidad geografica",
+    "metricas deportivas",
+  ],
+  authors: [{ name: "MyBeat" }],
+  creator: "MyBeat",
+  category: "health",
   manifest: "/site.webmanifest",
   icons: {
     icon: [
@@ -34,18 +47,23 @@ export const metadata: Metadata = {
     ],
   },
   openGraph: {
-    title: "Mybeat",
+    title: "MyBeat - Diario de actividad fisica seguro",
     description:
-      "Visualiza y comparte tus actividades deportivas desde archivos GPX.",
-    siteName: "Mybeat",
+      "Sube archivos GPX, visualiza tus metricas deportivas y comparte tu progreso con control de privacidad geografica.",
+    siteName: "MyBeat",
     locale: "es_MX",
     type: "website",
+    url: "/",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Mybeat",
+    title: "MyBeat - Diario de actividad fisica seguro",
     description:
-      "Visualiza y comparte tus actividades deportivas desde archivos GPX.",
+      "Sube archivos GPX, visualiza tus metricas deportivas y comparte tu progreso con control de privacidad geografica.",
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 
