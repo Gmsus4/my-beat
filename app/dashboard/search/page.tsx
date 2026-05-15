@@ -35,38 +35,32 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   const { q } = await searchParams;
   const query = Array.isArray(q) ? q[0] ?? "" : q ?? "";
-  const normalizedQuery = query.trim();
+  const normalizedQuery = query.trim().toLowerCase().replace(/^@/, "");
   const followingIds = new Set(
     currentUser.following.map((follow) => follow.followingId),
   );
-  const users = await prisma.user.findMany({
-    where: {
-      id: { not: currentUser.id },
-      ...(normalizedQuery
-        ? {
-            OR: [
-              { username: { contains: normalizedQuery, mode: "insensitive" } },
-              { name: { contains: normalizedQuery, mode: "insensitive" } },
-            ],
-          }
-        : {}),
-    },
-    orderBy: { createdAt: "desc" },
-    take: 24,
-    select: {
-      id: true,
-      username: true,
-      name: true,
-      avatar: true,
-      bio: true,
-      _count: {
-        select: {
-          activities: { where: { isPublic: true } },
-          followers: true,
+  const users = normalizedQuery
+    ? await prisma.user.findMany({
+        where: {
+          id: { not: currentUser.id },
+          username: normalizedQuery,
         },
-      },
-    },
-  });
+        take: 1,
+        select: {
+          id: true,
+          username: true,
+          name: true,
+          avatar: true,
+          bio: true,
+          _count: {
+            select: {
+              activities: { where: { isPublic: true } },
+              followers: true,
+            },
+          },
+        },
+      })
+    : [];
 
   return (
     <main className="px-4 py-8 text-white sm:px-6 sm:py-10">
@@ -79,7 +73,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             Encuentra atletas
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-zinc-400 sm:text-base">
-            Sigue usuarios para ver sus actividades públicas en tu inicio.
+            Busca por username exacto para proteger la privacidad de otros usuarios.
           </p>
         </div>
 
@@ -87,7 +81,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           <input
             name="q"
             defaultValue={normalizedQuery}
-            placeholder="Buscar por nombre o username"
+            placeholder="username o @username"
             className="h-11 w-full rounded-md border border-zinc-800 bg-black px-4 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-orange-500 sm:h-12"
           />
           <button
@@ -98,7 +92,17 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           </button>
         </form>
 
-        {users.length > 0 ? (
+        {!normalizedQuery ? (
+          <div className="rounded-lg border border-dashed border-zinc-800 bg-zinc-950/50 p-6 sm:p-8">
+            <h2 className="text-lg font-semibold sm:text-xl">
+              Busca un username exacto.
+            </h2>
+            <p className="mt-2 text-sm text-zinc-400">
+              No mostramos un directorio de usuarios. Escribe el username de la
+              persona que quieres encontrar.
+            </p>
+          </div>
+        ) : users.length > 0 ? (
           <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
             {users.map((user) => (
               <article
@@ -148,7 +152,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               No encontramos usuarios.
             </h2>
             <p className="mt-2 text-sm text-zinc-400">
-              Prueba con otro nombre o username.
+              Revisa que el username este escrito correctamente.
             </p>
           </div>
         )}
@@ -169,3 +173,4 @@ function Avatar({ name, avatar }: { name: string; avatar: string | null }) {
     </span>
   );
 }
+
